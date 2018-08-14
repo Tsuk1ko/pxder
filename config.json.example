@@ -1,0 +1,6 @@
+{
+	"user": "YOUR_USERNAME",
+	"passwd": "YOUR_PASSWORD",
+	"downloadPath": "./pixiv",
+	"thread": 5
+}

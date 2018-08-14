@@ -1,0 +1,30 @@
+{
+  "name": "pixiv-downloader",
+  "version": "1.0.0",
+  "description": "Download illusts from pixiv.net",
+  "main": "index.js",
+  "dependencies": {
+    "crawl-neko": "^1.2.0",
+    "minimist": "^1.2.0",
+    "pixiv-api-client": "^0.17.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YKilin/pixiv-downloader.git"
+  },
+  "keywords": [
+    "pixiv",
+    "downloader",
+    "illust"
+  ],
+  "author": "Jindai Kirin",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/YKilin/pixiv-downloader/issues"
+  },
+  "homepage": "https://github.com/YKilin/pixiv-downloader#readme"
+}
