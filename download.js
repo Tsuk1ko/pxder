@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-13 15:33:51 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-15 00:57:41
+ * @Last Modified time: 2018-08-15 01:21:53
  */
 
 const Tools = require('crawl-neko').getTools();
@@ -81,8 +81,8 @@ function downloadIllusts(illusts, dldir, totalThread) {
 				//构建文件名
 				let url = urls[j];
 				let ext = url.substr(url.lastIndexOf('.'));
-				let fileName = '(' + illust.pid + ')' + illust.title + (batch ? '_p' + j : '') + ext;
-				fileName = fileName.replace(/[/\\:*?"<>|.&\$]/g, '');
+				let fileName = '(' + illust.pid + ')' + illust.title + (batch ? '_p' + j : '');
+				fileName = fileName.replace(/[/\\:*?"<>|.&\$]/g, '') + ext;
 				//跳过已有图片
 				if (Fs.existsSync(Path.join(dldir, fileName))) continue;
 				//开始下载
