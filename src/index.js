@@ -2,11 +2,12 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 14:34:13 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-14 16:51:48
+ * @Last Modified time: 2018-08-15 16:15:29
  */
 
-
 const PixivApi = require('pixiv-api-client');
+const Downloader = require('./downloader');
+
 
 class PixivFunc {
 	/**
@@ -15,20 +16,23 @@ class PixivFunc {
 	 * @param {*} config 配置参数
 	 */
 	async login(config) {
-		let pixiv = new PixivApi();
-		await pixiv.login(config.user, config.passwd);
-		this.pixiv = pixiv;
+		//登录
+		this.pixiv = new PixivApi();
+		await this.pixiv.login(config.user, config.passwd);
+		//设置下载参数
+		Downloader.setConfig(config.download);
 	}
 
 	/**
-	 * 获取一个画师的所有插画
+	 * 根据UID下载插画
 	 *
-	 * @param {number} uid 画师UID
-	 * @returns 画师信息及所有插画
+	 * @param {*} uids 画师UID（可数组）
 	 * @memberof PixivFunc
 	 */
-	getAllIllusts(uid) {
-		return require('./illust')(this.pixiv, uid);
+	async downloadByUIDs(uids) {
+		for (let uid of (Array.isArray(uids) ? uids : [uids])) {
+			await Downloader.downloadByUID(this.pixiv, uid);
+		}
 	}
 
 	/**

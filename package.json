@@ -1,6 +1,6 @@
 {
   "name": "pixiv-downloader",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Download illusts from pixiv.net",
   "main": "index.js",
   "dependencies": {

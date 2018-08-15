@@ -1,6 +1,9 @@
 {
 	"user": "YOUR_USERNAME",
 	"passwd": "YOUR_PASSWORD",
-	"downloadPath": "./pixiv",
-	"thread": 5
+	"download": {
+		"path": "./pixiv",
+		"thread": 5,
+		"autoUpdateDirectoryName": false
+	}
 }
