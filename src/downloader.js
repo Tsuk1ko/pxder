@@ -2,22 +2,23 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-15 11:05:12 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-15 16:57:34
+ * @Last Modified time: 2018-08-16 22:57:02
  */
 
 const NekoTools = require('crawl-neko').getTools();
 const Illustrator = require('./illustrator');
 const Fs = require("fs");
+const Fse = require('fs-extra');
 const Path = require("path");
 const Tools = require('./tools');
+require('colors');
 
 let config;
 
-
 /**
- * 设置参数
+ * 设置配置
  *
- * @param {*} conf 参数
+ * @param {*} conf 配置
  */
 function setConfig(conf) {
 	config = conf;
@@ -57,13 +58,13 @@ async function downloadByUID(pixiv, uid) {
 	//决定下载目录
 	if (!dldir) {
 		dldir = dldirNew;
-	} else if (config.autoUpdateDirectoryName && dldir != dldirNew) {
-		console.log("\nDirectory renamed: %s => %s", dldir, dldirNew);
+	} else if (config.autoRename && dldir != dldirNew) {
+		console.log("\nDirectory renamed: %s => %s", dldir.yellow, dldirNew.green);
 		Fs.renameSync(Path.join(mainDir, dldir), Path.join(mainDir, dldirNew));
 		dldir = dldirNew;
 	}
 	//获取所有插画的地址
-	process.stdout.write("\nCollecting illusts of (uid=" + uid + ") " + userData.name + " ...");
+	process.stdout.write("\nCollecting illusts of " + "uid=".gray + uid.toString().blue + " " + userData.name.yellow + " ...");
 	let illusts = [];
 	let next;
 	do {
@@ -75,7 +76,7 @@ async function downloadByUID(pixiv, uid) {
 			}
 		});
 	} while (next);
-	console.log(" Done\n")
+	console.log(" Done".green)
 	//下载
 	await downloadIllusts(illusts, Path.join(mainDir, dldir), config.thread);
 }
@@ -90,7 +91,11 @@ async function downloadByUID(pixiv, uid) {
  * @returns
  */
 function downloadIllusts(illusts, dldir, totalThread) {
+	let tempDir = Path.join(dldir, "temp");
 	let totalI = 0;
+	//清除残留的临时文件
+	if (Fs.existsSync(tempDir)) Fse.removeSync(tempDir);
+	//开始多线程下载
 	return new Promise((resolve, reject) => {
 		let doneThread = 0;
 		//单个线程
@@ -100,7 +105,10 @@ function downloadIllusts(illusts, dldir, totalThread) {
 			//线程终止
 			if (!illust) {
 				//当最后一个线程终止时结束递归
-				if ((++doneThread) >= totalThread) resolve();
+				if ((++doneThread) >= totalThread) {
+					if (Fs.existsSync(tempDir)) Fs.rmdirSync(tempDir);
+					resolve();
+				}
 				return;
 			}
 			//构建文件名
@@ -111,12 +119,21 @@ function downloadIllusts(illusts, dldir, totalThread) {
 			//跳过已有图片
 			if (!Fs.existsSync(Path.join(dldir, fileName))) {
 				//开始下载
-				console.log("[%d]\t%d/%d\t(pid=%d)\t%s", threadID, parseInt(i) + 1, illusts.length, illust.pid, illust.title);
-				await NekoTools.download(dldir, fileName, url, {
-					headers: {
-						referer: 'https://www.pixiv.net/'
-					}
-				});
+				console.log("  [%d]\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.pid.toString().blue, illust.title.yellow);
+				async function tryDownload() {
+					return NekoTools.download(tempDir, fileName, url, {
+						headers: {
+							referer: 'https://www.pixiv.net/'
+						},
+						timeout: 1000 * 30
+					}).then(() => {
+						Fs.renameSync(Path.join(tempDir, fileName), Path.join(dldir, fileName));
+					}).catch(async () => {
+						console.log("RETRY".red + "\t%s/%d\t" + " pid=".gray + "%s\t%s", (parseInt(i) + 1).toString().green, illusts.length, illust.pid.toString().blue, illust.title.yellow);
+						return tryDownload();
+					});
+				}
+				await tryDownload();
 			}
 			singleThread(threadID);
 		}

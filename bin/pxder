@@ -1,0 +1,117 @@
+#!/usr/bin/env node
+
+'use strict';
+
+require('colors');
+const Fs = require('fs');
+const Pixiv = require('../src/index');
+const pkg = require('../package.json');
+
+let program = require('commander');
+let readline = require('readline-sync');
+const configFile = '../config.json';
+
+/*
+ * Usage
+ */
+
+program.usage('<options> [value] ...')
+	.option('    --login', 'login Pixiv')
+	.option('    --logout', 'logout Pixiv')
+	.option('')
+	.option('-P, --path        <path>', 'illusts will be download to this dirctory')
+	.option('-T, --thread      <number>', 'set the number of download threads (default is 5)')
+	.option('-A, --auto-rename', 'auto rename dirctories while illustrators changed their name')
+	.option('    --disable-auto-rename', 'disable auto rename dirctories')
+	.option('')
+	.option('-S, --save', 'save above options')
+	.option('    --clear', 'clear all saved options (include login state)')
+	.option('')
+	.option('    --uid         <uids>', 'download illusts by UID, multiple UIDs separated by commas (,)')
+	.option('')
+	.version(pkg.version, '-v, --version')
+	.parse(process.argv);
+
+
+/*
+ * Start
+ */
+let config = Pixiv.readConfig();
+
+handleArgv().then(async () => {
+	//检查配置
+	if (!Pixiv.checkConfig(config)) {
+		console.log('\nRun ' + 'pxder -h'.yellow + ' for more usage information.\n')
+		process.exit();
+	}
+	//重登陆
+	let pixiv = new Pixiv();
+	await pixiv.relogin();
+	//开始下载
+	console.log('\nDownload Path:    '.blue + config.download.path.toString().yellow);
+	console.log('Download Thread:  '.blue + config.download.thread.toString().yellow);
+	if (program.uid) {
+		//得到UID
+		let uids = program.uid;
+		if (typeof (uids) == 'string')
+			uids = uids.split(',');
+		await pixiv.downloadByUIDs(uids);
+	} else {
+		console.error("\nMissing arguments!".red);
+		program.outputHelp();
+	}
+}).catch(e => {
+	if (e.errors && e.errors.system && e.errors.system.message) console.error('\nERROR: '.red + e.errors.system.message + '\n');
+	else console.error(e);
+	process.exit();
+});
+
+
+async function handleArgv() {
+	//配置项
+	let info = '';
+	if (program.path) {
+		config.download.path = program.path;
+		info += '\nDownload Path:   '.blue + config.download.path;
+	}
+	if (program.thread) {
+		config.download.thread = parseInt(program.thread);
+		info += '\nDownload Thread: '.blue + config.download.thread;
+	}
+	if (program.autoRename) {
+		config.download.autoRename = true;
+		info += '\nAuto rename:     '.blue + config.download.autoRename;
+	} else if (program.disableAutoRename) {
+		config.download.autoRename = false;
+		info += '\nAuto rename:     '.blue + config.download.autoRename;
+	}
+	//其他选项
+	let pass = false;
+	if (program.login) {
+		//登录
+		let u = readline.question('Username: '.yellow);
+		let p = readline.question('Password: '.yellow, {
+			hideEchoBack: true
+		});
+		await Pixiv.login(u, p)
+		console.log('\nLogin success!\n'.green);
+	} else if (program.logout) {
+		//登出
+		Pixiv.logout();
+		console.log('\nLogout success!\n'.green);
+	} else if (program.save) {
+		//保存配置
+		Pixiv.writeConfig(config);
+		console.log(info);
+		console.log('\nSave success!\n'.green);
+	} else if (program.clear) {
+		//清除配置
+		Pixiv.initConfig(true);
+		console.log('\nClear success!\n'.green);
+	} else {
+		pass = true;
+	}
+	if (!pass) {
+		process.exit();
+	}
+}
