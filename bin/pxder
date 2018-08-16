@@ -9,7 +9,6 @@ const pkg = require('../package.json');
 
 let program = require('commander');
 let readline = require('readline-sync');
-const configFile = '../config.json';
 
 /*
  * Usage

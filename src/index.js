@@ -2,15 +2,16 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 14:34:13 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-16 23:42:18
+ * @Last Modified time: 2018-08-17 00:24:26
  */
 
 require('colors');
 const PixivApi = require('pixiv-api-client');
 const Downloader = require('./downloader');
 const Fs = require('fs');
+const Path = require('path');
 
-const configFile = '../config.json';
+const configFile = Path.normalize(__dirname + Path.sep + '../config.json');
 
 class PixivFunc {
 
@@ -39,7 +40,7 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	static readConfig() {
-		PixivFunc.initConfig()
+		PixivFunc.initConfig();
 		return require(configFile);
 	}
 
