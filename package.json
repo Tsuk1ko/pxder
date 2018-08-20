@@ -1,18 +1,21 @@
 {
   "name": "pxder",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Download illusts from pixiv.net",
   "main": "index.js",
   "dependencies": {
-    "@types/readline-sync": "^1.4.3",
     "colors": "^1.3.1",
     "commander": "^2.17.1",
     "crawl-neko": "^1.2.0",
     "fs-extra": "^7.0.0",
+    "https-proxy-agent": "^2.2.1",
     "pixiv-api-client": "^0.17.1",
-    "readline-sync": "^1.4.9"
+    "readline-sync": "^1.4.9",
+    "socks-proxy-agent": "^4.0.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/readline-sync": "^1.4.3"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

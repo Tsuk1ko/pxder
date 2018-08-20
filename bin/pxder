@@ -15,18 +15,12 @@ let readline = require('readline-sync');
  */
 
 program.usage('<options> [value] ...')
-	.option('    --login', 'login Pixiv')
-	.option('    --logout', 'logout Pixiv')
+	.option('--login', 'login Pixiv')
+	.option('--logout', 'logout Pixiv')
 	.option('')
-	.option('-P, --path        <path>', 'illusts will be download to this dirctory')
-	.option('-T, --thread      <number>', 'set the number of download threads (default is 5)')
-	.option('-A, --auto-rename', 'auto rename dirctories while illustrators changed their name')
-	.option('    --disable-auto-rename', 'disable auto rename dirctories')
+	.option('--setting', 'open options menu')
 	.option('')
-	.option('-S, --save', 'save above options')
-	.option('    --clear', 'clear all saved options (include login state)')
-	.option('')
-	.option('    --uid         <uids>', 'download illusts by UID, multiple UIDs separated by commas (,)')
+	.option('--uid <uids>', 'download illusts by UID, multiple UIDs separated by commas (,)')
 	.option('')
 	.version(pkg.version, '-v, --version')
 	.parse(process.argv);
@@ -47,8 +41,9 @@ handleArgv().then(async () => {
 	let pixiv = new Pixiv();
 	await pixiv.relogin();
 	//开始下载
-	console.log('\nDownload Path:    '.blue + config.download.path.toString().yellow);
-	console.log('Download Thread:  '.blue + config.download.thread.toString().yellow);
+	console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
+	if(typeof (config.proxy) == "string" && config.proxy.length > 0)
+		console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
 	if (program.uid) {
 		//得到UID
 		let uids = program.uid;
@@ -56,7 +51,7 @@ handleArgv().then(async () => {
 			uids = uids.split(',');
 		await pixiv.downloadByUIDs(uids);
 	} else {
-		console.error("\nMissing arguments!".red);
+		console.error("\nMissing arguments!".bgRed);
 		program.outputHelp();
 	}
 }).catch(e => {
@@ -67,27 +62,11 @@ handleArgv().then(async () => {
 
 
 async function handleArgv() {
-	//配置项
-	let info = '';
-	if (program.path) {
-		config.download.path = program.path;
-		info += '\nDownload Path:   '.blue + config.download.path;
-	}
-	if (program.thread) {
-		config.download.thread = parseInt(program.thread);
-		info += '\nDownload Thread: '.blue + config.download.thread;
-	}
-	if (program.autoRename) {
-		config.download.autoRename = true;
-		info += '\nAuto rename:     '.blue + config.download.autoRename;
-	} else if (program.disableAutoRename) {
-		config.download.autoRename = false;
-		info += '\nAuto rename:     '.blue + config.download.autoRename;
-	}
 	//其他选项
 	let pass = false;
 	if (program.login) {
 		//登录
+		console.log('\nPixiv Login\n'.cyan);
 		let u = readline.question('Username: '.yellow);
 		let p = readline.question('Password: '.yellow, {
 			hideEchoBack: true
@@ -98,19 +77,79 @@ async function handleArgv() {
 		//登出
 		Pixiv.logout();
 		console.log('\nLogout success!\n'.green);
-	} else if (program.save) {
-		//保存配置
-		Pixiv.writeConfig(config);
-		console.log(info);
-		console.log('\nSave success!\n'.green);
-	} else if (program.clear) {
-		//清除配置
-		Pixiv.initConfig(true);
-		console.log('\nClear success!\n'.green);
+	} else if (program.setting) {
+		//设置
+		let index;
+		do {
+			console.clear();
+			console.log('Pxder Options'.green);
+			let options = [
+				'Download path\t'.yellow + (config.download.path ? config.download.path : 'Null, please set one'.bgRed),
+				'Download thread\t'.yellow + config.download.thread,
+				'Download timeout\t'.yellow + config.download.timeout,
+				'Auto rename\t\t'.yellow + (config.download.autoRename ? 'On' : 'Off'),
+				'Proxy\t\t'.yellow + (typeof (config.proxy) == "string" && config.proxy.length > 0 ? config.proxy : 'Disable')
+			];
+			index = readline.keyInSelect(options, 'Press a key:', {
+				cancel: 'Exit'.bgMagenta
+			});
+			console.log();
+
+			switch (index) {
+				case 0: //下载路径
+					config.download.path = readline.questionPath('Please input a download path:\n'.yellow, {
+						isDirectory: true,
+						exists: null,
+						cd: false
+					});
+					break;
+
+				case 1: //下载线程
+					config.download.thread = getStrictIntInput('Please input the number of download thread:'.yellow + ' [1-10, default is 5]\n', {
+						defaultInput: 5
+					}, input => (input >= 1 && input <= 10), 'It must be between 1 and 10.');
+					break;
+
+				case 2: //下载超时
+					config.download.timeout = getStrictIntInput('Please input the seconds of download timeout:'.yellow + ' [default is 30]\n', {
+						defaultInput: 30
+					}, input => (input > 0), 'It must be greater than 0.');
+					break;
+
+				case 3: //自动重命名
+					config.download.autoRename = readline.keyInYNStrict('Do you want to turn on auto rename?'.yellow)
+					break;
+
+				case 4: //代理设置
+					config.proxy = readline.question(
+						'Please input your HTTP/SOCKS proxy like:\n'.yellow +
+						'  <Protocol>://[user:passwd@]<IP>:<Port>\n' +
+						'Such as\n'.yellow +
+						'  http://127.0.0.1:1080\n' +
+						'  socks://user:passwd@127.0.0.1:1080\n' +
+						'If you want to DISABLE it, just input nothing.\n'.yellow, {
+							limitMessage: '\nIncorrect format, please re-input.\n'.bgRed,
+							limit: /(^(http|socks):\/\/(.+@)?((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d))):(([1-9]\d{0,3})|([1-5]\d{4})|(6[0-4]\d{3})|(65[0-4]\d{2})|(655[0-2]\d)|(6553[0-5]))$)|(^$)/
+						});
+					break;
+			}
+			Pixiv.writeConfig(config);
+		} while (index !== -1);
+		console.log('Exit'.green);
 	} else {
 		pass = true;
 	}
 	if (!pass) {
 		process.exit();
 	}
+}
+
+
+function getStrictIntInput(question, option, limit, limitReply) {
+	let result = readline.questionInt(question, option);
+	while (!limit(result)) {
+		console.log('\n' + limitReply.bgRed + '\n');
+		result = readline.questionInt(question, option);
+	}
+	return result;
 }

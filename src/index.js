@@ -2,14 +2,17 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 14:34:13 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-17 00:24:26
+ * @Last Modified time: 2018-08-20 18:56:33
  */
 
 require('colors');
-const PixivApi = require('pixiv-api-client');
+const PixivApi = require('./pixiv-api-client-mod');
 const Downloader = require('./downloader');
 const Fs = require('fs');
 const Path = require('path');
+
+const SocksProxyAgent = require('socks-proxy-agent');
+const HttpsProxyAgent = require('https-proxy-agent');
 
 const configFile = Path.normalize(__dirname + Path.sep + '../config.json');
 
@@ -27,6 +30,7 @@ class PixivFunc {
 			Fs.writeFileSync(configFile, JSON.stringify({
 				download: {
 					thread: 5,
+					timeout: 30,
 					autoRename: false
 				}
 			}));
@@ -41,7 +45,13 @@ class PixivFunc {
 	 */
 	static readConfig() {
 		PixivFunc.initConfig();
-		return require(configFile);
+		let config = require(configFile);
+		//check
+		if (!config.download.thread) config.download.thread = 5;
+		if (!config.download.autoRename) config.download.autoRename = false;
+		if (!config.download.timeout) config.download.timeout = 30;
+		PixivFunc.applyConfig(config);
+		return config;
 	}
 
 	/**
@@ -66,18 +76,35 @@ class PixivFunc {
 	static checkConfig(config = PixivFunc.readConfig()) {
 		let check = true;
 		if (!config.refresh_token) {
-			console.error((check ? '\n' : '') + 'You must login first!\n    Try ' + 'pxder --login'.yellow);
+			console.error('\nYou must login first!'.red + '\n    Try ' + 'pxder --login'.yellow);
 			check = false;
 		}
 		if (!config.download.path) {
 			check = false;
-			console.error((check ? '\n' : '') + 'You must set download path first!\n    Try ' + 'pxder --save --path '.yellow + 'YOUR_PATH'.blue);
-		}
-		//设置下载器
-		if (check) {
-			Downloader.setConfig(config.download);
+			console.error('\nYou must set download path first!'.red + '\n    Try ' + 'pxder --setting'.yellow);
 		}
 		return check;
+	}
+
+	/**
+	 * 应用配置
+	 *
+	 * @static
+	 * @param {*} config 配置
+	 * @memberof PixivFunc
+	 */
+	static applyConfig(config) {
+		Downloader.setConfig(config.download);
+		let proxy = config.proxy;
+		let agent = false;
+		if (typeof (proxy) == "string") {
+			if (proxy.search('http://') === 0) agent = new HttpsProxyAgent(proxy);
+			else if (proxy.search('socks://') === 0) agent = new SocksProxyAgent(proxy);
+		}
+		if(agent){
+			Downloader.setAgent(agent);
+			PixivApi.setAgent(agent);
+		}
 	}
 
 	/**

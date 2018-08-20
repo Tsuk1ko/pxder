@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-15 11:05:12 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-16 22:57:02
+ * @Last Modified time: 2018-08-20 16:36:21
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -14,6 +14,7 @@ const Tools = require('./tools');
 require('colors');
 
 let config;
+let httpsAgent = false;
 
 /**
  * 设置配置
@@ -22,6 +23,15 @@ let config;
  */
 function setConfig(conf) {
 	config = conf;
+}
+
+/**
+ * 设置Agent
+ *
+ * @param {*} agent Agent
+ */
+function setAgent(agent) {
+	httpsAgent = agent;
 }
 
 /**
@@ -39,6 +49,7 @@ async function downloadByUID(pixiv, uid) {
 	});
 	//下载目录
 	let mainDir = config.path;
+	if (!Fs.existsSync(mainDir)) NekoTools.mkdirsSync(mainDir);
 	let dldir = null;
 	//先搜寻已有目录
 	await Tools.readDirSync(mainDir).then(files => {
@@ -64,7 +75,7 @@ async function downloadByUID(pixiv, uid) {
 		dldir = dldirNew;
 	}
 	//获取所有插画的地址
-	process.stdout.write("\nCollecting illusts of " + "uid=".gray + uid.toString().blue + " " + userData.name.yellow + " ...");
+	process.stdout.write("\nCollecting illusts of " + "uid=".gray + uid.toString().cyan + " " + userData.name.yellow + " ...");
 	let illusts = [];
 	let next;
 	do {
@@ -119,17 +130,17 @@ function downloadIllusts(illusts, dldir, totalThread) {
 			//跳过已有图片
 			if (!Fs.existsSync(Path.join(dldir, fileName))) {
 				//开始下载
-				console.log("  [%d]\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.pid.toString().blue, illust.title.yellow);
+				console.log("  [%d]\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.pid.toString().cyan, illust.title.yellow);
 				async function tryDownload() {
-					return NekoTools.download(tempDir, fileName, url, {
+					let options = {
 						headers: {
 							referer: 'https://www.pixiv.net/'
 						},
-						timeout: 1000 * 30
-					}).then(() => {
-						Fs.renameSync(Path.join(tempDir, fileName), Path.join(dldir, fileName));
-					}).catch(async () => {
-						console.log("RETRY".red + "\t%s/%d\t" + " pid=".gray + "%s\t%s", (parseInt(i) + 1).toString().green, illusts.length, illust.pid.toString().blue, illust.title.yellow);
+						timeout: 1000 * config.timeout
+					};
+					if (httpsAgent) options.httpsAgent = httpsAgent;
+					return NekoTools.download(tempDir, fileName, url, options).then(() => Fs.renameSync(Path.join(tempDir, fileName), Path.join(dldir, fileName))).catch(async () => {
+						console.log("  [%d]".red + "\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.pid.toString().cyan, illust.title.yellow);
 						return tryDownload();
 					});
 				}
@@ -148,5 +159,6 @@ function downloadIllusts(illusts, dldir, totalThread) {
 
 module.exports = {
 	setConfig,
+	setAgent,
 	downloadByUID
 };
