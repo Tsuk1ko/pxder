@@ -1,7 +1,7 @@
 {
   "name": "pxder",
-  "version": "2.2.1",
-  "description": "Download illusts from pixiv.net",
+  "version": "2.2.2",
+  "description": "Download illusts from pixiv.net 从P站批量下载插画",
   "main": "index.js",
   "dependencies": {
     "colors": "^1.3.1",

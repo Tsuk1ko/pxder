@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 08:44:16 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-23 17:04:06
+ * @Last Modified time: 2018-08-23 19:43:17
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -140,7 +140,7 @@ function downloadIllusts(illusts, dldir, totalThread) {
 				//失败重试
 				return NekoTools.download(tempDir, illust.file, illust.url, options)
 					.then(() => Fs.renameSync(Path.join(tempDir, illust.file), Path.join(dldir, illust.file)))
-					.catch(async () => {
+					.catch(() => {
 						console.log("  [%d]".red + "\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
 						return tryDownload();
 					});

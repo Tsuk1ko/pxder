@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 14:49:30 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-23 16:44:23
+ * @Last Modified time: 2018-08-23 19:44:30
  */
 
 /**
@@ -54,7 +54,7 @@ class Illust {
 				//组图
 				for (let pi in illustJSON.meta_pages) {
 					let url = illustJSON.meta_pages[pi].image_urls.original;
-					illusts.push(new Illust(id, title + '_p' + pi, url, '(' + id + ')' + title.replace(/[/\\:*?"<>|.&\$]/g, '') + url.substr(url.lastIndexOf('.'))));
+					illusts.push(new Illust(id, title + '_p' + pi, url, '(' + id + ')' + title.replace(/[/\\:*?"<>|.&\$]/g, '') + '_p' + pi + url.substr(url.lastIndexOf('.'))));
 				}
 			} else if (illustJSON.meta_single_page.original_image_url) {
 				let url = illustJSON.meta_single_page.original_image_url;
