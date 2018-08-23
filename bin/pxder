@@ -63,6 +63,8 @@ handleArgv().then(async () => {
 		console.error("\nMissing arguments!".bgRed);
 		program.outputHelp();
 	}
+
+	pixiv.clearReloginTimeout();
 }).catch(e => {
 	if (e.errors && e.errors.system && e.errors.system.message) console.error('\nERROR: '.red + e.errors.system.message + '\n');
 	else console.error(e);

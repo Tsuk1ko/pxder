@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 14:34:13 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-23 18:51:49
+ * @Last Modified time: 2018-08-23 21:33:58
  */
 
 require('colors');
@@ -150,7 +150,18 @@ class PixivFunc {
 		this.pixiv = new PixivApi();
 		await this.pixiv.refreshAccessToken(refresh_token);
 		Illustrator.setPixiv(this.pixiv);
+		//定时刷新token
+		this.reloginTimeout = setTimeout(this.relogin, 40 * 60 * 1000);
 		return true;
+	}
+
+	/**
+	 * 清除定时重登陆
+	 *
+	 * @memberof PixivFunc
+	 */
+	clearReloginTimeout() {
+		clearTimeout(this.reloginTimeout);
 	}
 
 	/**
