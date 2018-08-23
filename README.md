@@ -1,8 +1,6 @@
 # pixiv downloader
 ![运行示例](https://i.loli.net/2018/08/20/5b7aaccfb1c4a.gif)
 
-目前只试做了一个下载某一画师的所有插画的功能，其余功能仍在开发中
-
 简单写下说明（针对 Windows 用户）
 
 

@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 14:34:13 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-23 17:17:43
+ * @Last Modified time: 2018-08-23 18:51:49
  */
 
 require('colors');
@@ -246,10 +246,11 @@ class PixivFunc {
 		let illustrators = null;
 		//临时文件
 		let tmpJson = Path.join(__config.download.path, (isPrivate ? 'private' : 'public') + '.json');
+		if (!Fs.existsSync(__config.download.path)) Fs.mkdirSync(__config.download.path);
 
 		//取得关注列表
 		process.stdout.write('\nCollecting your follows .');
-		let dots = setInterval(() => process.stdout.write('.'), 1000);
+		let dots = setInterval(() => process.stdout.write('.'), 2000);
 		if (!Fs.existsSync(tmpJson)) {
 			await this.getAllMyFollow(isPrivate).then(ret => {
 				illustrators = ret;
