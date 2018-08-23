@@ -20,7 +20,10 @@ program.usage('<options> [value] ...')
 	.option('')
 	.option('--setting', 'open options menu')
 	.option('')
-	.option('--uid <uids>', 'download illusts by UID, multiple UIDs separated by commas (,)')
+	.option('-u, --uid <uid(s)>', 'download illusts by UID, multiple UIDs separated by commas (,)')
+	.option('-f, --follow', 'download illusts from all your public follows')
+	.option('-F, --follow-private', 'download illusts from all your private follows')
+	.option('-U, --update', 'update illustrators\' illusts in your download path')
 	.option('')
 	.version(pkg.version, '-v, --version')
 	.parse(process.argv);
@@ -42,7 +45,7 @@ handleArgv().then(async () => {
 	await pixiv.relogin();
 	//开始下载
 	console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
-	if(typeof (config.proxy) == "string" && config.proxy.length > 0)
+	if (typeof (config.proxy) == "string" && config.proxy.length > 0)
 		console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
 	if (program.uid) {
 		//得到UID
@@ -50,6 +53,12 @@ handleArgv().then(async () => {
 		if (typeof (uids) == 'string')
 			uids = uids.split(',');
 		await pixiv.downloadByUIDs(uids);
+	} else if (program.follow) {
+		await pixiv.downloadFollowAll();
+	} else if (program.followPrivate) {
+		await pixiv.downloadFollowAll(true);
+	} else if (program.update) {
+		await pixiv.downloadUpdate();
 	} else {
 		console.error("\nMissing arguments!".bgRed);
 		program.outputHelp();
@@ -132,9 +141,11 @@ async function handleArgv() {
 							limit: /(^(http|socks):\/\/(.+@)?((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d))):(([1-9]\d{0,3})|([1-5]\d{4})|(6[0-4]\d{3})|(65[0-4]\d{2})|(655[0-2]\d)|(6553[0-5]))$)|(^$)/
 						});
 					break;
-			}
+			} //switch end
+
 			Pixiv.writeConfig(config);
 		} while (index !== -1);
+
 		console.log('Exit'.green);
 	} else {
 		pass = true;

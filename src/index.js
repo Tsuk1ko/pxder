@@ -2,21 +2,28 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 14:34:13 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-20 18:56:33
+ * @Last Modified time: 2018-08-23 17:17:43
  */
 
 require('colors');
 const PixivApi = require('./pixiv-api-client-mod');
 const Downloader = require('./downloader');
+const Illustrator = require('./illustrator');
 const Fs = require('fs');
 const Path = require('path');
+const Tools = require('./tools');
 
 const SocksProxyAgent = require('socks-proxy-agent');
 const HttpsProxyAgent = require('https-proxy-agent');
 
 const configFile = Path.normalize(__dirname + Path.sep + '../config.json');
 
+let __config;
+
 class PixivFunc {
+	constructor() {
+		this.followNextUrl = null;
+	}
 
 	/**
 	 * 初始化配置文件
@@ -94,6 +101,7 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	static applyConfig(config) {
+		__config = config;
 		Downloader.setConfig(config.download);
 		let proxy = config.proxy;
 		let agent = false;
@@ -101,7 +109,7 @@ class PixivFunc {
 			if (proxy.search('http://') === 0) agent = new HttpsProxyAgent(proxy);
 			else if (proxy.search('socks://') === 0) agent = new SocksProxyAgent(proxy);
 		}
-		if(agent){
+		if (agent) {
 			Downloader.setAgent(agent);
 			PixivApi.setAgent(agent);
 		}
@@ -141,6 +149,7 @@ class PixivFunc {
 		//刷新token
 		this.pixiv = new PixivApi();
 		await this.pixiv.refreshAccessToken(refresh_token);
+		Illustrator.setPixiv(this.pixiv);
 		return true;
 	}
 
@@ -157,17 +166,135 @@ class PixivFunc {
 	}
 
 	/**
+	 * 取得我的关注（一次30个）
+	 *
+	 * @param {boolean} [isPrivate=false] 是否是私密关注
+	 * @returns 关注列表
+	 * @memberof PixivFunc
+	 */
+	async getMyFollow(isPrivate = false) {
+		let follows = [];
+		let next = this.followNextUrl;
+
+		//加入画师信息
+		function addToFollows(data) {
+			next = data.next_url;
+			for (let preview of data.user_previews) {
+				follows.push(new Illustrator(preview.user.id, preview.user.name));
+			}
+		}
+
+		//开始收集
+		if (next) {
+			await this.pixiv.requestUrl(next).then(addToFollows);
+		} else await this.pixiv.userFollowing(this.pixiv.authInfo().user.id, {
+			restrict: isPrivate ? 'private' : 'public'
+		}).then(addToFollows);
+
+		this.followNextUrl = next;
+		return follows;
+	}
+
+	/**
+	 * 是否还有关注画师可以取得
+	 *
+	 * @returns 是或否
+	 * @memberof PixivFunc
+	 */
+	hasNextMyFollow() {
+		return this.followNextUrl ? true : false;
+	}
+
+	/**
+	 * 取得我的所有关注
+	 *
+	 * @param {boolean} [isPrivate=false] 是否是私密关注
+	 * @returns 关注列表
+	 * @memberof PixivFunc
+	 */
+	async getAllMyFollow(isPrivate = false) {
+		let follows = [];
+		do {
+			await this.getMyFollow(isPrivate).then(ret => follows = follows.concat(ret));
+		} while (this.followNextUrl);
+		return follows;
+	}
+
+	/**
 	 * 根据UID下载插画
 	 *
 	 * @param {*} uids 画师UID（可数组）
 	 * @memberof PixivFunc
 	 */
 	async downloadByUIDs(uids) {
-		for (let uid of (Array.isArray(uids) ? uids : [uids])) {
-			await Downloader.downloadByUID(this.pixiv, uid).catch(e => {
+		let uidArray = (Array.isArray(uids) ? uids : [uids]);
+		for (let uid of uidArray) {
+			await Downloader.downloadByIllustrators([new Illustrator(uid)]).catch(e => {
 				console.error(e);
 			});
 		}
+	}
+
+	/**
+	 * 下载关注画师的所有插画
+	 *
+	 * @param {boolean} [isPrivate=false] 是否是私密关注
+	 * @memberof PixivFunc
+	 */
+	async downloadFollowAll(isPrivate = false) {
+		let follows = [];
+		let illustrators = null;
+		//临时文件
+		let tmpJson = Path.join(__config.download.path, (isPrivate ? 'private' : 'public') + '.json');
+
+		//取得关注列表
+		process.stdout.write('\nCollecting your follows .');
+		let dots = setInterval(() => process.stdout.write('.'), 1000);
+		if (!Fs.existsSync(tmpJson)) {
+			await this.getAllMyFollow(isPrivate).then(ret => {
+				illustrators = ret;
+				ret.forEach(illustrator => follows.push({
+					id: illustrator.id,
+					name: illustrator.name
+				}));
+			});
+			Fs.writeFileSync(tmpJson, JSON.stringify(follows));
+		} else follows = require(tmpJson);
+		clearInterval(dots);
+		console.log("  Done".green);
+
+		//开始下载
+		if (!illustrators) {
+			illustrators = [];
+			follows.forEach(follow => illustrators.push(new Illustrator(follow.id, follow.name)));
+		}
+		await Downloader.downloadByIllustrators(illustrators, () => {
+			follows.shift();
+			Fs.writeFileSync(tmpJson, JSON.stringify(follows));
+		})
+
+		//清除临时文件
+		Fs.unlinkSync(tmpJson);
+	}
+
+	/**
+	 * 对下载目录内的所有画师更新画作
+	 *
+	 * @memberof PixivFunc
+	 */
+	async downloadUpdate() {
+		let uids = [];
+		//得到文件夹内所有UID
+		await Tools.readDirSync(__config.download.path).then(files => {
+			for (let file of files) {
+				let search = /^\(([0-9]+)\)/.exec(file);
+				if (search) uids.push(search[1]);
+			}
+		});
+		//下载
+		let illustrators = [];
+		uids.forEach(uid => illustrators.push(new Illustrator(uid)));
+		await Downloader.downloadByIllustrators(illustrators);
 	}
 
 	/**
