@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 08:44:16 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-23 19:43:17
+ * @Last Modified time: 2018-08-24 10:34:17
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -128,7 +128,8 @@ function downloadIllusts(illusts, dldir, totalThread) {
 
 			//开始下载
 			console.log("  [%d]\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
-			async function tryDownload() {
+			async function tryDownload(times) {
+				if (times > 10) return;
 				let options = {
 					headers: {
 						referer: pixivRefer
@@ -141,11 +142,11 @@ function downloadIllusts(illusts, dldir, totalThread) {
 				return NekoTools.download(tempDir, illust.file, illust.url, options)
 					.then(() => Fs.renameSync(Path.join(tempDir, illust.file), Path.join(dldir, illust.file)))
 					.catch(() => {
-						console.log("  [%d]".red + "\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
-						return tryDownload();
+						console.log("  " + (times >= 10 ? "[%d]".bgRed : "[%d]".bgYellow) + "\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
+						return tryDownload(times + 1);
 					});
 			}
-			await tryDownload();
+			await tryDownload(1);
 			singleThread(threadID);
 		}
 

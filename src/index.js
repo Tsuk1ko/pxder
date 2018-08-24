@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 14:34:13 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-23 21:33:58
+ * @Last Modified time: 2018-08-24 10:41:15
  */
 
 require('colors');
@@ -16,7 +16,7 @@ const Tools = require('./tools');
 const SocksProxyAgent = require('socks-proxy-agent');
 const HttpsProxyAgent = require('https-proxy-agent');
 
-const configFile = Path.normalize(__dirname + Path.sep + '../config.json');
+const configFile = Path.normalize(__dirname + Path.sep + '../../../pxder.config.json');
 
 let __config;
 
@@ -151,7 +151,10 @@ class PixivFunc {
 		await this.pixiv.refreshAccessToken(refresh_token);
 		Illustrator.setPixiv(this.pixiv);
 		//定时刷新token
-		this.reloginTimeout = setTimeout(this.relogin, 40 * 60 * 1000);
+		let p = this.pixiv;
+		this.reloginInterval = setInterval(() => {
+			p.refreshAccessToken(refresh_token);
+		}, 40 * 60 * 1000);
 		return true;
 	}
 
@@ -160,8 +163,8 @@ class PixivFunc {
 	 *
 	 * @memberof PixivFunc
 	 */
-	clearReloginTimeout() {
-		clearTimeout(this.reloginTimeout);
+	clearReloginInterval() {
+		clearInterval(this.reloginInterval);
 	}
 
 	/**
