@@ -1,6 +1,6 @@
 {
   "name": "pxder",
-  "version": "2.2.5",
+  "version": "2.2.6",
   "description": "Download illusts from pixiv.net 从P站批量下载插画",
   "main": "index.js",
   "dependencies": {
