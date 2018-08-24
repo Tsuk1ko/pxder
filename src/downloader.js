@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 08:44:16 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-24 10:34:17
+ * @Last Modified time: 2018-08-25 01:58:19
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -185,7 +185,7 @@ async function getIllustratorNewDir(data) {
 	let iName = data.name;
 	let nameExtIndex = iName.search(/@|＠/);
 	if (nameExtIndex >= 1) iName = iName.substring(0, nameExtIndex);
-	iName = iName.replace(/[/\\:*?"<>|.&\$]/g, '');
+	iName = iName.replace(/[/\\:*?"<>|.&\$]/g, '').replace(/[ ]+&/, '');
 	let dldirNew = '(' + data.id + ')' + iName;
 
 	//决定下载目录
