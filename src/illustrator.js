@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-13 15:38:50 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-27 09:17:03
+ * @Last Modified time: 2018-08-27 16:09:54
  */
 
 const Illust = require('./illust');
@@ -25,8 +25,10 @@ class Illustrator {
 	constructor(uid, uname = '', illustsJSON = false) {
 		this.id = uid;
 		this.name = uname;
-		this.first = true; //是否首次请求
-		this.nextIllustsUrl = null;
+		this.next = {
+			illust: null,
+			bookmark: null
+		}
 		if (illustsJSON) {
 			this.exampleIllusts = [];
 			for (let illustJSON of illustsJSON) {
@@ -60,33 +62,69 @@ class Illustrator {
 	}
 
 	/**
-	 * 得到画师的插画（一次30张）
+	 * 按类型获取插画
 	 *
-	 * @returns 如果没有了，返回 null
+	 * @param {string} type 类型
+	 * @param {*} [option=null] 选项
+	 * @returns 插画列表
 	 * @memberof Illustrator
 	 */
-	async illusts() {
+	async getSomeIllusts(type, option = null) {
 		let result = [];
 		let json;
 
 		//请求
-		if (this.nextIllustsUrl)
-			await pixiv.requestUrl(this.nextIllustsUrl).then(ret => json = ret);
-		else
-			await pixiv.userIllusts(this.id).then(ret => json = ret);
+		if (this.next[type])
+			await pixiv.requestUrl(this.next[type]).then(ret => json = ret);
+		else {
+			if (type == 'illust') await pixiv.userIllusts(this.id).then(ret => json = ret);
+			else if (type == 'bookmark') {
+				if (option) await pixiv.userBookmarksIllust(this.id, option).then(ret => json = ret);
+				else await pixiv.userBookmarksIllust(this.id).then(ret => json = ret);
+			}
+		}
 
 		//数据整合
 		for (let illust of json.illusts) {
 			result = result.concat(Illust.getIllusts(illust));
 		}
 
-		this.nextIllustsUrl = json.next_url;
+		this.next[type] = json.next_url;
 
 		return result;
 	}
 
-	hasNextIllusts() {
-		return this.nextIllustsUrl ? true : false;
+	/**
+	 * 得到画师的插画（一次30张）
+	 *
+	 * @returns
+	 * @memberof Illustrator
+	 */
+	illusts() {
+		return this.getSomeIllusts('illust');
+	}
+
+	/**
+	 * 得到画师的插画（一次30张）
+	 *
+	 * @param {boolean} [isPrivate=false] 是否是私密
+	 * @returns
+	 * @memberof Illustrator
+	 */
+	bookmarks(isPrivate = false) {
+		return this.getSomeIllusts('bookmark', {
+			restrict: isPrivate ? 'private' : 'public'
+		});
+	}
+
+	/**
+	 * 是否还有
+	 *
+	 * @returns
+	 * @memberof Illustrator
+	 */
+	hasNext(nextName) {
+		return this.next[nextName] ? true : false;
 	}
 }
 

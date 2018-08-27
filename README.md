@@ -121,3 +121,18 @@ pxder -U
 # 或
 pxder --update
 ```
+
+### (4) 下载你的收藏中的插画作品
+#### 公开收藏
+```bash
+pxder -b
+# 或
+pxder --bookmark
+```
+
+#### 私密收藏
+```bash
+pxder -B
+# 或
+pxder --bookmark--private
+```

@@ -14,15 +14,17 @@ let readline = require('readline-sync');
  * Usage
  */
 
-program.usage('<options> [value] ...')
+program.usage('<options> [value]')
 	.option('--login', 'login Pixiv')
 	.option('--logout', 'logout Pixiv')
 	.option('')
 	.option('--setting', 'open options menu')
 	.option('')
-	.option('-u, --uid <uid(s)>', 'download illusts by UID, multiple UIDs separated by commas (,)')
-	.option('-f, --follow', 'download illusts from all your public follows')
-	.option('-F, --follow-private', 'download illusts from all your private follows')
+	.option('-u, --uid <uid(s)>', 'download / update illusts by UID, multiple UIDs separated by commas (,)')
+	.option('-f, --follow', 'download / update illusts from your public follows')
+	.option('-F, --follow-private', 'download / update illusts from your private follows')
+	.option('-b, --bookmark', 'download / update illusts from your public bookmark')
+	.option('-B, --bookmark-private', 'download / update illusts from your private bookmark')
 	.option('-U, --update', 'update illustrators\' illusts in your download path')
 	.option('')
 	.version(pkg.version, '-v, --version')
@@ -53,13 +55,12 @@ handleArgv().then(async () => {
 		if (typeof (uids) == 'string')
 			uids = uids.split(',');
 		await pixiv.downloadByUIDs(uids);
-	} else if (program.follow) {
-		await pixiv.downloadFollowAll();
-	} else if (program.followPrivate) {
-		await pixiv.downloadFollowAll(true);
-	} else if (program.update) {
-		await pixiv.downloadUpdate();
-	} else {
+	} else if (program.follow) await pixiv.downloadFollowAll();
+	else if (program.followPrivate) await pixiv.downloadFollowAll(true);
+	else if (program.update) await pixiv.downloadUpdate();
+	else if (program.bookmark) await pixiv.downloadBookmark();
+	else if (program.bookmarkPrivate) await pixiv.downloadBookmark(true);
+	else {
 		console.error("\nMissing arguments!".bgRed);
 		program.outputHelp();
 	}

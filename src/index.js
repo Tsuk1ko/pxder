@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 14:34:13 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-27 09:49:27
+ * @Last Modified time: 2018-08-27 15:56:36
  */
 
 require('colors');
@@ -247,6 +247,17 @@ class PixivFunc {
 				console.error(e);
 			});
 		}
+	}
+
+	/**
+	 * 根据收藏下载插画
+	 *
+	 * @param {boolean} [isPrivate=false] 是否私密
+	 * @memberof PixivFunc
+	 */
+	async downloadBookmark(isPrivate = false) {
+		let me = new Illustrator(this.pixiv.authInfo().user.id);
+		await Downloader.downloadByBookmark(me, isPrivate);
 	}
 
 	/**

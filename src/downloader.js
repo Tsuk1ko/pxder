@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 08:44:16 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-27 10:26:36
+ * @Last Modified time: 2018-08-27 16:14:50
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -100,12 +100,49 @@ async function getDownloadListByIllustrator(illustrator) {
 				cnt++;
 			}
 		}
-	} while (illustrator.hasNextIllusts() && cnt > 0);
+	} while (illustrator.hasNext('illust') && cnt > 0);
 
 	return {
 		dir,
 		illusts: illusts.reverse()
 	}
+}
+
+
+/**
+ * 下载自己的收藏
+ *
+ * @param {Illustrator} me 自己
+ * @param {boolean} [isPrivate=false] 是否是私密
+ * @returns
+ */
+async function downloadByBookmark(me, isPrivate = false) {
+	//得到画师下载目录
+	let dir = '[bookmark] ' + (isPrivate ? 'Private' : 'Public');
+
+	process.stdout.write("\nCollecting illusts of your bookmark .");
+	let dots = setInterval(() => process.stdout.write('.'), 2000);
+
+	//得到未下载的画作
+	let illusts = [];
+	let cnt;
+	do {
+		cnt = 0;
+		let temps;
+		await me.bookmarks().then(ret => temps = ret);
+		for (let temp of temps) {
+			if (!Fs.existsSync(Path.join(config.path, dir, temp.file))) {
+				illusts.push(temp);
+				cnt++;
+			}
+		}
+	} while (me.hasNext('bookmarks') && cnt > 0);
+
+	clearInterval(dots);
+	console.log("  Done".green);
+
+	//下载
+	await downloadIllusts(illusts.reverse(), Path.join(config.path, dir), config.thread);
 }
 
 
@@ -220,5 +257,6 @@ async function getIllustratorNewDir(data) {
 module.exports = {
 	setConfig,
 	setAgent,
-	downloadByIllustrators
+	downloadByIllustrators,
+	downloadByBookmark
 };
