@@ -124,6 +124,7 @@ pxder --update
 
 ### (4) 下载你的收藏中的插画作品
 #### 公开收藏
+插画会被下载至`[bookmark] Public`文件夹中
 ```bash
 pxder -b
 # 或
@@ -131,6 +132,7 @@ pxder --bookmark
 ```
 
 #### 私密收藏
+插画会被下载至`[bookmark] Private`文件夹中
 ```bash
 pxder -B
 # 或
