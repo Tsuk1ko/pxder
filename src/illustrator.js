@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-13 15:38:50 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-23 16:44:13
+ * @Last Modified time: 2018-08-27 09:17:03
  */
 
 const Illust = require('./illust');
@@ -19,13 +19,20 @@ class Illustrator {
 	 *Creates an instance of Illustrator.
 	 * @param {*} uid 画师UID
 	 * @param {string} [uname=''] 画师名字
+	 * @param {*} [illustsJSON=false] 画师画作JSON
 	 * @memberof Illustrator
 	 */
-	constructor(uid, uname = '') {
+	constructor(uid, uname = '', illustsJSON = false) {
 		this.id = uid;
 		this.name = uname;
 		this.first = true; //是否首次请求
 		this.nextIllustsUrl = null;
+		if (illustsJSON) {
+			this.exampleIllusts = [];
+			for (let illustJSON of illustsJSON) {
+				this.exampleIllusts = this.exampleIllusts.concat(Illust.getIllusts(illustJSON));
+			}
+		}
 	}
 
 	static setPixiv(p) {

@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 14:34:13 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-24 10:41:15
+ * @Last Modified time: 2018-08-27 09:49:27
  */
 
 require('colors');
@@ -194,7 +194,7 @@ class PixivFunc {
 		function addToFollows(data) {
 			next = data.next_url;
 			for (let preview of data.user_previews) {
-				follows.push(new Illustrator(preview.user.id, preview.user.name));
+				follows.push(new Illustrator(preview.user.id, preview.user.name, preview.illusts));
 			}
 		}
 
@@ -270,7 +270,8 @@ class PixivFunc {
 				illustrators = ret;
 				ret.forEach(illustrator => follows.push({
 					id: illustrator.id,
-					name: illustrator.name
+					name: illustrator.name,
+					illusts: illustrator.exampleIllusts
 				}));
 			});
 			Fs.writeFileSync(tmpJson, JSON.stringify(follows));
@@ -278,15 +279,21 @@ class PixivFunc {
 		clearInterval(dots);
 		console.log("  Done".green);
 
-		//开始下载
+		//数据恢复
 		if (!illustrators) {
 			illustrators = [];
-			follows.forEach(follow => illustrators.push(new Illustrator(follow.id, follow.name)));
+			for (let follow of follows) {
+				let tempI = new Illustrator(follow.id, follow.name);
+				tempI.exampleIllusts = follow.illusts;
+				illustrators.push(tempI);
+			}
 		}
+
+		//开始下载
 		await Downloader.downloadByIllustrators(illustrators, () => {
 			follows.shift();
 			Fs.writeFileSync(tmpJson, JSON.stringify(follows));
-		})
+		});
 
 		//清除临时文件
 		Fs.unlinkSync(tmpJson);

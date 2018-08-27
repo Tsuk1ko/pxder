@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 08:44:16 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-25 17:41:33
+ * @Last Modified time: 2018-08-27 10:26:36
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -67,12 +67,28 @@ async function downloadByIllustrators(illustrators, callback) {
  * @returns
  */
 async function getDownloadListByIllustrator(illustrator) {
+	let illusts = [];
+
 	//得到画师下载目录
 	let dir;
 	await illustrator.info().then(getIllustratorNewDir).then(ret => dir = ret);
 
+	//最新画作检查
+	let exampleIllusts = illustrator.exampleIllusts;
+	let existNum = 0;
+	for (let ei of exampleIllusts) {
+		if (Fs.existsSync(Path.join(config.path, dir, ei.file))) existNum++;
+		else illusts.push(ei);
+	}
+	if (existNum > 0) {
+		return {
+			dir,
+			illusts: illusts.reverse()
+		}
+	}
+
 	//得到未下载的画作
-	let illusts = [];
+	illusts = [];
 	let cnt;
 	do {
 		cnt = 0;
