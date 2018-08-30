@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 08:44:16 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-27 16:14:50
+ * @Last Modified time: 2018-08-30 23:57:59
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -136,7 +136,7 @@ async function downloadByBookmark(me, isPrivate = false) {
 				cnt++;
 			}
 		}
-	} while (me.hasNext('bookmarks') && cnt > 0);
+	} while (me.hasNext('bookmark') && cnt > 0);
 
 	clearInterval(dots);
 	console.log("  Done".green);

@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-13 15:38:50 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-27 16:09:54
+ * @Last Modified time: 2018-08-30 23:58:18
  */
 
 const Illust = require('./illust');
@@ -95,7 +95,7 @@ class Illustrator {
 	}
 
 	/**
-	 * 得到画师的插画（一次30张）
+	 * 得到用户的插画（一次30张）
 	 *
 	 * @returns
 	 * @memberof Illustrator
@@ -105,7 +105,7 @@ class Illustrator {
 	}
 
 	/**
-	 * 得到画师的插画（一次30张）
+	 * 得到用户的收藏（一次30张）
 	 *
 	 * @param {boolean} [isPrivate=false] 是否是私密
 	 * @returns
