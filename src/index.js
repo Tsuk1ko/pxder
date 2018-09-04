@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 14:34:13 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-27 15:56:36
+ * @Last Modified time: 2018-09-04 17:49:25
  */
 
 require('colors');
@@ -194,7 +194,8 @@ class PixivFunc {
 		function addToFollows(data) {
 			next = data.next_url;
 			for (let preview of data.user_previews) {
-				follows.push(new Illustrator(preview.user.id, preview.user.name, preview.illusts));
+				if (preview.user.id != 11) //除去“pixiv事務局”
+					follows.push(new Illustrator(preview.user.id, preview.user.name, preview.illusts));
 			}
 		}
 
