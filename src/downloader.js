@@ -1,8 +1,8 @@
 /*
- * @Author: Jindai Kirin 
- * @Date: 2018-08-23 08:44:16 
- * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-30 23:57:59
+ * @Author: Jindai Kirin
+ * @Date: 2018-08-23 08:44:16
+ * @Last modified by:   simon3000
+ * @Last modified time: 2018-09-06 22:46:58
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -254,9 +254,44 @@ async function getIllustratorNewDir(data) {
 }
 
 
+/**
+ * 得到某个作品对应的下载目录名
+ *
+ * @param {Object} illustJSON 作品JSON
+ * @returns 下载目录名
+ */
+function getIllustNewDir(illustJSON) {
+	//下载目录
+	let pidDir = Path.join(config.path, './PID/');
+	if (!Fs.existsSync(pidDir)) NekoTools.mkdirsSync(pidDir);
+
+	//按照上面那个一样的操作→_→
+	let iName = illustJSON.title;
+	let nameExtIndex = iName.search(/@|＠/);
+	if (nameExtIndex >= 1) iName = iName.substring(0, nameExtIndex);
+	iName = iName.replace(/[/\\:*?"<>|.&\$]/g, '').replace(/[ ]+$/, '');
+	let dldir = './PID/(' + illustJSON.id + ')' + iName;
+
+	return dldir;
+}
+
+
+/**
+ * 根据PID下载
+ * @method downloadByIllusts
+ * @param {Array}		pids PID们
+ */
+async function downloadByIllusts(illustJSON) {
+	let illusts = Illust.getIllusts(illustJSON.illust);
+	let dldir = getIllustNewDir(illustJSON.illust);
+	await downloadIllusts(illusts, Path.join(config.path, dldir), config.thread);
+}
+
+
 module.exports = {
 	setConfig,
 	setAgent,
+	downloadByIllusts,
 	downloadByIllustrators,
 	downloadByBookmark
 };

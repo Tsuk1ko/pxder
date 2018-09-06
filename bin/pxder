@@ -23,6 +23,7 @@ program.usage('<options> [value]')
 	.option('-u, --uid <uid(s)>', 'download / update illusts by UID, multiple UIDs separated by commas (,)')
 	.option('-f, --follow', 'download / update illusts from your public follows')
 	.option('-F, --follow-private', 'download / update illusts from your private follows')
+	.option('-p, --pid <pid(s)>', 'download illusts by PID')
 	.option('-b, --bookmark', 'download / update illusts from your public bookmark')
 	.option('-B, --bookmark-private', 'download / update illusts from your private bookmark')
 	.option('-U, --update', 'update illustrators\' illusts in your download path')
@@ -58,7 +59,13 @@ handleArgv().then(async () => {
 	} else if (program.follow) await pixiv.downloadFollowAll();
 	else if (program.followPrivate) await pixiv.downloadFollowAll(true);
 	else if (program.update) await pixiv.downloadUpdate();
-	else if (program.bookmark) await pixiv.downloadBookmark();
+	else if (program.pid) {
+	//得到PID
+	let pids = program.pid;
+	if (typeof (pids) == 'string')
+			pids = pids.split(',');
+		await pixiv.downloadByPIDs(pids);
+	} else if (program.bookmark) await pixiv.downloadBookmark();
 	else if (program.bookmarkPrivate) await pixiv.downloadBookmark(true);
 	else {
 		console.error("\nMissing arguments!".bgRed);
