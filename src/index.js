@@ -1,8 +1,8 @@
 /*
- * @Author: Jindai Kirin 
- * @Date: 2018-08-14 14:34:13 
- * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-09-04 17:49:25
+ * @Author: Jindai Kirin
+ * @Date: 2018-08-14 14:34:13
+ * @Last modified by:   simon3000
+ * @Last modified time: 2018-09-06 22:28:31
  */
 
 require('colors');
@@ -340,6 +340,17 @@ class PixivFunc {
 	 */
 	static tools() {
 		return require('./tools');
+	}
+
+	/**
+	 * 根据PID下载插画
+	 * @param {Array} pids 作品PID
+	 * @memberof PixivFunc
+	 */
+	async downloadByPIDs(pids) {
+		for (let pid of pids) {
+			await Downloader.downloadByIllusts(await this.pixiv.illustDetail(pid));
+		}
 	}
 }
 
