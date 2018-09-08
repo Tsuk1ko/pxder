@@ -192,12 +192,20 @@ function downloadIllusts(illusts, dldir, totalThread) {
 				//代理
 				if (httpsAgent) options.httpsAgent = httpsAgent;
 				//失败重试
-				return NekoTools.download(tempDir, illust.file, illust.url, options)
-					.then(() => Fs.renameSync(Path.join(tempDir, illust.file), Path.join(dldir, illust.file)))
-					.catch(() => {
-						console.log("  " + (times >= 10 ? "[%d]".bgRed : "[%d]".bgYellow) + "\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
-						return tryDownload(times + 1);
-					});
+				return NekoTools.download(tempDir, illust.file, illust.url, options).then(res => {
+					//文件完整性校验
+					let fileSize = res.headers['content-length'];
+					let dlFile = Path.join(tempDir, illust.file);
+					let dlFileSize = Fs.statSync(dlFile).size;
+					if (dlFileSize == fileSize) Fs.renameSync(dlFile, Path.join(dldir, illust.file));
+					else {
+						Fs.unlinkSync(dlFile);
+						throw new Error('Incomplete download');
+					}
+				}).catch(() => {
+					console.log("  " + (times >= 10 ? "[%d]".bgRed : "[%d]".bgYellow) + "\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
+					return tryDownload(times + 1);
+				});
 			}
 			await tryDownload(1);
 			singleThread(threadID);
@@ -255,36 +263,14 @@ async function getIllustratorNewDir(data) {
 
 
 /**
- * 得到某个作品对应的下载目录名
- *
- * @param {Object} illustJSON 作品JSON
- * @returns 下载目录名
- */
-function getIllustNewDir(illustJSON) {
-	//下载目录
-	let pidDir = Path.join(config.path, './PID/');
-	if (!Fs.existsSync(pidDir)) NekoTools.mkdirsSync(pidDir);
-
-	//按照上面那个一样的操作→_→
-	let iName = illustJSON.title;
-	let nameExtIndex = iName.search(/@|＠/);
-	if (nameExtIndex >= 1) iName = iName.substring(0, nameExtIndex);
-	iName = iName.replace(/[/\\:*?"<>|.&\$]/g, '').replace(/[ ]+$/, '');
-	let dldir = './PID/(' + illustJSON.id + ')' + iName;
-
-	return dldir;
-}
-
-
-/**
  * 根据PID下载
  * @method downloadByIllusts
- * @param {Array}		pids PID们
+ * @param {Array} illustJSON 由API得到的画作JSON
  */
 async function downloadByIllusts(illustJSON) {
+	console.log();
 	let illusts = Illust.getIllusts(illustJSON.illust);
-	let dldir = getIllustNewDir(illustJSON.illust);
-	await downloadIllusts(illusts, Path.join(config.path, dldir), config.thread);
+	await downloadIllusts(illusts, Path.join(config.path, 'PID'), config.thread);
 }
 
 

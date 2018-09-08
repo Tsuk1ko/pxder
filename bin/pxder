@@ -20,10 +20,11 @@ program.usage('<options> [value]')
 	.option('')
 	.option('--setting', 'open options menu')
 	.option('')
+	.option('-p, --pid <pid(s)>', 'download illusts by PID')
 	.option('-u, --uid <uid(s)>', 'download / update illusts by UID, multiple UIDs separated by commas (,)')
 	.option('-f, --follow', 'download / update illusts from your public follows')
 	.option('-F, --follow-private', 'download / update illusts from your private follows')
-	.option('-p, --pid <pid(s)>', 'download illusts by PID')
+	.option('    --force', 'ignore last progress')
 	.option('-b, --bookmark', 'download / update illusts from your public bookmark')
 	.option('-B, --bookmark-private', 'download / update illusts from your private bookmark')
 	.option('-U, --update', 'update illustrators\' illusts in your download path')
@@ -43,9 +44,11 @@ handleArgv().then(async () => {
 		console.log('\nRun ' + 'pxder -h'.yellow + ' for more usage information.\n')
 		process.exit();
 	}
+
 	//重登陆
 	let pixiv = new Pixiv();
 	await pixiv.relogin();
+
 	//开始下载
 	console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
 	if (typeof (config.proxy) == "string" && config.proxy.length > 0)
@@ -56,13 +59,13 @@ handleArgv().then(async () => {
 		if (typeof (uids) == 'string')
 			uids = uids.split(',');
 		await pixiv.downloadByUIDs(uids);
-	} else if (program.follow) await pixiv.downloadFollowAll();
-	else if (program.followPrivate) await pixiv.downloadFollowAll(true);
+	} else if (program.follow) await pixiv.downloadFollowAll(false, program.force);
+	else if (program.followPrivate) await pixiv.downloadFollowAll(true, program.force);
 	else if (program.update) await pixiv.downloadUpdate();
 	else if (program.pid) {
-	//得到PID
-	let pids = program.pid;
-	if (typeof (pids) == 'string')
+		//得到PID
+		let pids = program.pid;
+		if (typeof (pids) == 'string')
 			pids = pids.split(',');
 		await pixiv.downloadByPIDs(pids);
 	} else if (program.bookmark) await pixiv.downloadBookmark();

@@ -16,7 +16,8 @@ const Tools = require('./tools');
 const SocksProxyAgent = require('socks-proxy-agent');
 const HttpsProxyAgent = require('https-proxy-agent');
 
-const configFile = Path.normalize(__dirname + Path.sep + '../../../pxder.config.json');
+const configFileDir = require('appdata-path').getAppDataPath('pxder');
+const configFile = Path.join(configFileDir, 'config.json');
 
 let __config;
 
@@ -33,6 +34,7 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	static initConfig(forceInit = false) {
+		if (!Fs.existsSync(configFileDir)) Fs.mkdirSync(configFileDir);
 		if (!Fs.existsSync(configFile) || forceInit)
 			Fs.writeFileSync(configFile, JSON.stringify({
 				download: {
@@ -264,20 +266,23 @@ class PixivFunc {
 	/**
 	 * 下载关注画师的所有插画
 	 *
-	 * @param {boolean} [isPrivate=false] 是否是私密关注
+	 * @param {boolean} isPrivate 是否是私密关注
+	 * @param {boolean} force 是否忽略上次进度
 	 * @memberof PixivFunc
 	 */
-	async downloadFollowAll(isPrivate = false) {
+	async downloadFollowAll(isPrivate, force) {
 		let follows = [];
 		let illustrators = null;
+
 		//临时文件
-		let tmpJson = Path.join(__config.download.path, (isPrivate ? 'private' : 'public') + '.json');
+		let tmpJson = Path.join(configFileDir, (isPrivate ? 'private' : 'public') + '.json');
 		if (!Fs.existsSync(__config.download.path)) Fs.mkdirSync(__config.download.path);
 
 		//取得关注列表
-		process.stdout.write('\nCollecting your follows .');
-		let dots = setInterval(() => process.stdout.write('.'), 2000);
-		if (!Fs.existsSync(tmpJson)) {
+		if (!Fs.existsSync(tmpJson) || force) {
+			process.stdout.write('\nCollecting your follows .');
+			let dots = setInterval(() => process.stdout.write('.'), 2000);
+
 			await this.getAllMyFollow(isPrivate).then(ret => {
 				illustrators = ret;
 				ret.forEach(illustrator => follows.push({
@@ -287,9 +292,10 @@ class PixivFunc {
 				}));
 			});
 			Fs.writeFileSync(tmpJson, JSON.stringify(follows));
+
+			clearInterval(dots);
+			console.log("  Done".green);
 		} else follows = require(tmpJson);
-		clearInterval(dots);
-		console.log("  Done".green);
 
 		//数据恢复
 		if (!illustrators) {
