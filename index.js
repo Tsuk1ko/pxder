@@ -1,1 +1,1 @@
-console.log('Just for test.');
+console.log('Nothing here (');
