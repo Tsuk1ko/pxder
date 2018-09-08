@@ -68,7 +68,7 @@ pxder --setting
   如果输入空行则关闭代理
 
 
-注：在 Windows 下配置文件通常存放于`C:\Users\你的用户\AppData\Roaming\npm`，而 Linux 下位于`npm安装路径/lib`
+注：配置文件存放路径由 [appdata-path](https://www.npmjs.com/package/appdata-path) 决定，位于该路径下的`pxder`文件夹内
 
 
 ## 运行机制
