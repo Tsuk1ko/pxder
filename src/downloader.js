@@ -129,7 +129,7 @@ async function downloadByBookmark(me, isPrivate = false) {
 	do {
 		cnt = 0;
 		let temps;
-		await me.bookmarks().then(ret => temps = ret);
+		await me.bookmarks(isPrivate).then(ret => temps = ret);
 		for (let temp of temps) {
 			if (!Fs.existsSync(Path.join(config.path, dir, temp.file))) {
 				illusts.push(temp);

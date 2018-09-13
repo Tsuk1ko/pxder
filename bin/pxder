@@ -147,8 +147,8 @@ async function handleArgv() {
 						'Please input your HTTP/SOCKS proxy like:\n'.yellow +
 						'  <Protocol>://[user:passwd@]<IP>:<Port>\n' +
 						'Such as\n'.yellow +
-						'  http://127.0.0.1:1080\n' +
-						'  socks://user:passwd@127.0.0.1:1080\n' +
+						'  http://user:passwd@127.0.0.1:1080\n' +
+						'  socks://127.0.0.1:1080\n' +
 						'If you want to DISABLE it, just input nothing.\n'.yellow, {
 							limitMessage: '\nIncorrect format, please re-input.\n'.bgRed,
 							limit: /(^(http|socks):\/\/(.+@)?((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d))):(([1-9]\d{0,3})|([1-5]\d{4})|(6[0-4]\d{3})|(65[0-4]\d{2})|(655[0-2]\d)|(6553[0-5]))$)|(^$)/
