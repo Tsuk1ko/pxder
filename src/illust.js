@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 14:49:30 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-23 19:44:30
+ * @Last Modified time: 2018-09-16 18:37:52
  */
 
 /**
@@ -45,23 +45,27 @@ class Illust {
 		let illusts = [];
 		//得到插画信息
 		let title = illustJSON.title;
+		let fileName = title.replace(/[/\\:*?"<>|.&\$\t]/g, ''); //适合的文件名
 		let id = illustJSON.id;
 		//动图的话是一个压缩包
 		if (illustJSON.type == "ugoira") {
-			illusts.push(new Illust(id, title, illustJSON.meta_single_page.original_image_url.replace('img-original', 'img-zip-ugoira').replace(/_ugoira0\.(.*)/, '_ugoira1920x1080.zip'), '(' + id + ')' + title.replace(/[/\\:*?"<>|.&\$]/g, '') + '.zip'));
+			illusts.push(new Illust(id, title, illustJSON.meta_single_page.original_image_url.replace('img-original', 'img-zip-ugoira').replace(/_ugoira0\.(.*)/, '_ugoira1920x1080.zip'), '(' + id + ')' + fileName + '.zip'));
 		} else {
 			if (illustJSON.meta_pages.length > 0) {
 				//组图
 				for (let pi in illustJSON.meta_pages) {
 					let url = illustJSON.meta_pages[pi].image_urls.original;
-					illusts.push(new Illust(id, title + '_p' + pi, url, '(' + id + ')' + title.replace(/[/\\:*?"<>|.&\$]/g, '') + '_p' + pi + url.substr(url.lastIndexOf('.'))));
+					let ext = url.substr(url.lastIndexOf('.')); //图片扩展名
+					illusts.push(new Illust(id, title + '_p' + pi, url, '(' + id + ')' + fileName + '_p' + pi + ext));
 				}
 			} else if (illustJSON.meta_single_page.original_image_url) {
 				let url = illustJSON.meta_single_page.original_image_url;
+				let ext = url.substr(url.lastIndexOf('.')); //图片扩展名
 				//单图
-				illusts.push(new Illust(id, title, url, '(' + id + ')' + title.replace(/[/\\:*?"<>|.&\$]/g, '') + url.substr(url.lastIndexOf('.'))));
+				illusts.push(new Illust(id, title, url, '(' + id + ')' + fileName + ext));
 			}
 		}
+		require('fs').writeFileSync('test.txt', JSON.stringify(illusts))
 		//结果
 		return illusts;
 	}
