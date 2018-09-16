@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 14:49:30 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-09-16 18:37:52
+ * @Last Modified time: 2018-09-16 23:26:16
  */
 
 /**
@@ -65,7 +65,6 @@ class Illust {
 				illusts.push(new Illust(id, title, url, '(' + id + ')' + fileName + ext));
 			}
 		}
-		require('fs').writeFileSync('test.txt', JSON.stringify(illusts))
 		//结果
 		return illusts;
 	}

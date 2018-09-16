@@ -75,15 +75,17 @@ async function getDownloadListByIllustrator(illustrator) {
 
 	//最新画作检查
 	let exampleIllusts = illustrator.exampleIllusts;
-	let existNum = 0;
-	for (let ei of exampleIllusts) {
-		if (Fs.existsSync(Path.join(config.path, dir, ei.file))) existNum++;
-		else illusts.push(ei);
-	}
-	if (existNum > 0) {
-		return {
-			dir,
-			illusts: illusts.reverse()
+	if (exampleIllusts) {
+		let existNum = 0;
+		for (let ei of exampleIllusts) {
+			if (Fs.existsSync(Path.join(config.path, dir, ei.file))) existNum++;
+			else illusts.push(ei);
+		}
+		if (existNum > 0) {
+			return {
+				dir,
+				illusts: illusts.reverse()
+			}
 		}
 	}
 
