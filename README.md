@@ -28,6 +28,8 @@ pxder --login
 ```
 然后会让你输入用户名密码，登录成功一次后以后如果没有出什么bug则无需再次登录
 
+注：pxder 仅会在计算机上储存 refreshAccessToken，而不会储存您的帐号密码
+
 如果要登出
 ```bash
 pxder --logout
