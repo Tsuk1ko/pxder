@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 14:49:30 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-09-16 23:26:16
+ * @Last Modified time: 2018-09-20 17:34:49
  */
 
 /**
@@ -44,8 +44,8 @@ class Illust {
 	static getIllusts(illustJSON) {
 		let illusts = [];
 		//得到插画信息
-		let title = illustJSON.title;
-		let fileName = title.replace(/[/\\:*?"<>|.&\$\t]/g, ''); //适合的文件名
+		let title = illustJSON.title.replace(/[\x00-\x1F\x7F]/g, '');
+		let fileName = title.replace(/[/\\:*?"<>|.&\$]/g, ''); //适合的文件名
 		let id = illustJSON.id;
 		//动图的话是一个压缩包
 		if (illustJSON.type == "ugoira") {
