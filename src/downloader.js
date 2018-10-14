@@ -200,11 +200,11 @@ function downloadIllusts(illusts, dldir, totalThread) {
 					//文件完整性校验
 					let fileSize = res.headers['content-length'];
 					let dlFile = Path.join(tempDir, illust.file);
-					if (!Fs.existsSync(dlFile)) await sleep(500); //不明bug
+					for (let i = 0; i < 15 && !Fs.existsSync(dlFile); i++) await sleep(200); //不明bug
 					let dlFileSize = Fs.statSync(dlFile).size;
 					if (dlFileSize == fileSize) Fs.renameSync(dlFile, Path.join(dldir, illust.file));
 					else {
-						console.log(res.headers);
+						//console.log(res.headers);
 						Fs.unlinkSync(dlFile);
 						throw new Error('Incomplete download');
 					}
