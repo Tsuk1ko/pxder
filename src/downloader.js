@@ -159,6 +159,7 @@ async function downloadByBookmark(me, isPrivate = false) {
 function downloadIllusts(illusts, dldir, totalThread) {
 	let tempDir = Path.join(dldir, "temp");
 	let totalI = 0;
+
 	//清除残留的临时文件
 	if (Fs.existsSync(tempDir)) Fse.removeSync(tempDir);
 
@@ -181,30 +182,34 @@ function downloadIllusts(illusts, dldir, totalThread) {
 				return;
 			}
 
+			let options = {
+				headers: {
+					referer: pixivRefer
+				},
+				timeout: 1000 * config.timeout
+			};
+			//代理
+			if (httpsAgent) options.httpsAgent = httpsAgent;
+
 			//开始下载
 			console.log("  [%d]\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
 			async function tryDownload(times) {
 				if (times > 10) return;
-				let options = {
-					headers: {
-						referer: pixivRefer
-					},
-					timeout: 1000 * config.timeout
-				};
-				//代理
-				if (httpsAgent) options.httpsAgent = httpsAgent;
 				//失败重试
-				return NekoTools.download(tempDir, illust.file, illust.url, options).then(res => {
+				return NekoTools.download(tempDir, illust.file, illust.url, options).then(async res => {
 					//文件完整性校验
 					let fileSize = res.headers['content-length'];
 					let dlFile = Path.join(tempDir, illust.file);
+					if (!Fs.existsSync(dlFile)) await sleep(500); //不明bug
 					let dlFileSize = Fs.statSync(dlFile).size;
 					if (dlFileSize == fileSize) Fs.renameSync(dlFile, Path.join(dldir, illust.file));
 					else {
+						console.log(res.headers);
 						Fs.unlinkSync(dlFile);
 						throw new Error('Incomplete download');
 					}
-				}).catch(() => {
+				}).catch((e) => {
+					//console.log(e)
 					console.log("  " + (times >= 10 ? "[%d]".bgRed : "[%d]".bgYellow) + "\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
 					return tryDownload(times + 1);
 				});
@@ -271,8 +276,20 @@ async function getIllustratorNewDir(data) {
  */
 async function downloadByIllusts(illustJSON) {
 	console.log();
-	let illusts = Illust.getIllusts(illustJSON.illust);
+	let illusts = [];
+	for (let json of illustJSON) {
+		illusts = illusts.concat(Illust.getIllusts(json));
+	}
 	await downloadIllusts(illusts, Path.join(config.path, 'PID'), config.thread);
+}
+
+
+async function sleep(ms) {
+	return new Promise(resolve => {
+		setTimeout(() => {
+			resolve();
+		}, ms);
+	});
 }
 
 

@@ -354,9 +354,11 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	async downloadByPIDs(pids) {
+		let jsons = [];
 		for (let pid of pids) {
-			await Downloader.downloadByIllusts(await this.pixiv.illustDetail(pid));
+			await this.pixiv.illustDetail(pid).then(json => jsons.push(json.illust));
 		}
+		await Downloader.downloadByIllusts(jsons);
 	}
 }
 
