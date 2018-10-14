@@ -53,27 +53,33 @@ handleArgv().then(async () => {
 	console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
 	if (typeof (config.proxy) == "string" && config.proxy.length > 0)
 		console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
+
+	if (program.follow) await pixiv.downloadFollowAll(false, program.force);
+	if (program.followPrivate) await pixiv.downloadFollowAll(true, program.force);
+	if (program.update) await pixiv.downloadUpdate();
+	if (program.bookmark) await pixiv.downloadBookmark();
+	if (program.bookmarkPrivate) await pixiv.downloadBookmark(true);
+
 	if (program.uid) {
 		//得到UID
 		let uids = program.uid;
-		if (typeof (uids) == 'string')
+		if (typeof (uids) == 'string') {
 			uids = uids.split(',');
-		await pixiv.downloadByUIDs(uids);
-	} else if (program.follow) await pixiv.downloadFollowAll(false, program.force);
-	else if (program.followPrivate) await pixiv.downloadFollowAll(true, program.force);
-	else if (program.update) await pixiv.downloadUpdate();
-	else if (program.pid) {
+			await pixiv.downloadByUIDs(uids);
+		} else help();
+	}
+	if (program.pid) {
 		//得到PID
 		let pids = program.pid;
-		if (typeof (pids) == 'string')
+		if (typeof (pids) == 'string') {
 			pids = pids.split(',');
-		await pixiv.downloadByPIDs(pids);
-	} else if (program.bookmark) await pixiv.downloadBookmark();
-	else if (program.bookmarkPrivate) await pixiv.downloadBookmark(true);
-	else {
-		console.error("\nMissing arguments!".bgRed);
-		program.outputHelp();
+			await pixiv.downloadByPIDs(pids);
+		} else help();
 	}
+
+	if (!(program.follow || program.followPrivate || program.update ||
+			program.bookmark || program.bookmarkPrivate ||
+			program.uid || program.pid)) help();
 
 	pixiv.clearReloginInterval();
 }).catch(e => {
@@ -176,4 +182,10 @@ function getStrictIntInput(question, option, limit, limitReply) {
 		result = readline.questionInt(question, option);
 	}
 	return result;
+}
+
+
+function help() {
+	console.error("\nMissing arguments!".bgRed);
+	program.outputHelp();
 }
