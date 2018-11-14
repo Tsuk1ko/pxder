@@ -1,13 +1,29 @@
 # pixiv downloader
 ![运行示例](https://i.loli.net/2018/08/20/5b7aaccfb1c4a.gif)
 
-简单写下说明（针对 Windows 用户）
+简单写下说明（主要针对 Windows 用户）
 
 
 ## 准备
 首先你需要先安装 Node.js  
+
+### Windows
 打开[官网](https://nodejs.org) => 下载右边的“最新发布版” => 安装一路确定
 
+### Linux
+```bash
+# Ubuntu
+curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Debian
+curl -sL https://deb.nodesource.com/setup_10.x | bash -
+apt-get install -y nodejs
+
+# Centos
+curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+yum install nodejs -y
+```
 
 ## 安装/更新/卸载
 打开“命令提示符”或者“Powershell”，执行下面的命令，即可安装或者更新（注：后续命令皆为在此执行）
