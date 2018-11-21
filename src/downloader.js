@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-23 08:44:16
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-11-21 21:54:30
+ * @Last Modified time: 2018-11-22 00:36:04
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -42,14 +42,10 @@ async function downloadByIllustrators(illustrators, callback) {
 
 		await illustrator.info();
 
-		process.stdout.write("\nCollecting illusts of " + (parseInt(i) + 1).toString().green + "/" + illustrators.length + " uid=".gray + illustrator.id.toString().cyan + " " + illustrator.name.yellow + " .");
-		let dots = setInterval(() => process.stdout.write('.'), 2000);
+		console.log("\nCollecting illusts of " + (parseInt(i) + 1).toString().green + "/" + illustrators.length + " uid=".gray + illustrator.id.toString().cyan + " " + illustrator.name.yellow);
 
 		//取得下载信息
 		await getDownloadListByIllustrator(illustrator).then(ret => info = ret);
-
-		clearInterval(dots);
-		console.log("  Done".green);
 
 		//下载
 		await downloadIllusts(info.illusts, Path.join(config.path, info.dir), config.thread);
@@ -91,6 +87,9 @@ async function getDownloadListByIllustrator(illustrator) {
 
 	//得到未下载的画作
 	illusts = [];
+
+	let processDisplay = Tools.showProgress(() => illusts.length);
+
 	let cnt;
 	do {
 		cnt = 0;
@@ -103,6 +102,8 @@ async function getDownloadListByIllustrator(illustrator) {
 			}
 		}
 	} while (illustrator.hasNext('illust') && cnt > 0);
+
+	Tools.clearProgress(processDisplay);
 
 	return {
 		dir,
@@ -122,11 +123,13 @@ async function downloadByBookmark(me, isPrivate = false) {
 	//得到画师下载目录
 	let dir = '[bookmark] ' + (isPrivate ? 'Private' : 'Public');
 
-	process.stdout.write("\nCollecting illusts of your bookmark .");
-	let dots = setInterval(() => process.stdout.write('.'), 2000);
+	console.log("\nCollecting illusts of your bookmark");
 
 	//得到未下载的画作
 	let illusts = [];
+
+	let processDisplay = Tools.showProgress(() => illusts.length);
+
 	let cnt;
 	do {
 		cnt = 0;
@@ -140,8 +143,7 @@ async function downloadByBookmark(me, isPrivate = false) {
 		}
 	} while (me.hasNext('bookmark') && cnt > 0);
 
-	clearInterval(dots);
-	console.log("  Done".green);
+	Tools.clearProgress(processDisplay);
 
 	//下载
 	await downloadIllusts(illusts.reverse(), Path.join(config.path, dir), config.thread);
@@ -176,7 +178,7 @@ function downloadIllusts(illusts, dldir, totalThread) {
 			if (!illust) {
 				//当最后一个线程终止时结束递归
 				if ((++doneThread) >= totalThread) {
-					if (Fs.existsSync(tempDir)) Fse.removeSync(tempDir);
+					//if (Fs.existsSync(tempDir)) Fse.removeSync(tempDir);
 					resolve();
 				}
 				return;
@@ -281,7 +283,7 @@ async function downloadByIllusts(illustJSON) {
 	console.log();
 	let illusts = [];
 	for (let json of illustJSON) {
-		illusts = illusts.concat(Illust.getIllusts(json));
+		await Illust.getIllusts(json).then(ret => illusts = illusts.concat(ret));
 	}
 	await downloadIllusts(illusts, Path.join(config.path, 'PID'), config.thread);
 }

@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-14 14:34:13
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-11-21 21:49:22
+ * @Last Modified time: 2018-11-22 00:34:37
  */
 
 require('colors');
@@ -153,6 +153,7 @@ class PixivFunc {
 		this.pixiv = new PixivApi();
 		await this.pixiv.refreshAccessToken(refresh_token);
 		Illustrator.setPixiv(this.pixiv);
+		require('./illust').setPixiv(this.pixiv);
 		//定时刷新token
 		let p = this.pixiv;
 		this.reloginInterval = setInterval(() => {
@@ -194,11 +195,14 @@ class PixivFunc {
 		let next = this.followNextUrl;
 
 		//加入画师信息
-		function addToFollows(data) {
+		async function addToFollows(data) {
 			next = data.next_url;
 			for (let preview of data.user_previews) {
-				if (preview.user.id != 11) //除去“pixiv事務局”
-					follows.push(new Illustrator(preview.user.id, preview.user.name, preview.illusts));
+				if (preview.user.id != 11) { //除去“pixiv事務局”
+					let tmp = new Illustrator(preview.user.id, preview.user.name);
+					await tmp.setExampleIllusts(preview.illusts);
+					follows.push(tmp);
+				}
 			}
 		}
 
@@ -232,9 +236,15 @@ class PixivFunc {
 	 */
 	async getAllMyFollow(isPrivate = false) {
 		let follows = [];
+
+		let processDisplay = Tools.showProgress(() => follows.length);
+
 		do {
 			await this.getMyFollow(isPrivate).then(ret => follows = follows.concat(ret));
 		} while (this.followNextUrl);
+
+		Tools.clearProgress(processDisplay);
+
 		return follows;
 	}
 
@@ -281,8 +291,7 @@ class PixivFunc {
 
 		//取得关注列表
 		if (!Fs.existsSync(tmpJson) || force) {
-			process.stdout.write('\nCollecting your follows .');
-			let dots = setInterval(() => process.stdout.write('.'), 2000);
+			console.log('\nCollecting your follows');
 
 			await this.getAllMyFollow(isPrivate).then(ret => {
 				illustrators = ret;
@@ -292,10 +301,8 @@ class PixivFunc {
 					illusts: illustrator.exampleIllusts
 				}));
 			});
-			Fs.writeFileSync(tmpJson, JSON.stringify(follows));
 
-			clearInterval(dots);
-			console.log("  Done".green);
+			Fs.writeFileSync(tmpJson, JSON.stringify(follows));
 		} else follows = require(tmpJson);
 
 		//数据恢复

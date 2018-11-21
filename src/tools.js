@@ -2,10 +2,11 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 15:53:22 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-14 16:11:03
+ * @Last Modified time: 2018-11-22 00:36:09
  */
 
 const Fs = require("fs");
+const Readline = require('readline');
 
 /**
  * 读取目录下的内容
@@ -22,7 +23,23 @@ function readDirSync(dirpath) {
 	});
 }
 
+function showProgress(valFn) {
+	return setInterval(() => {
+		Readline.clearLine(process.stdout, 0);
+		Readline.cursorTo(process.stdout, 0);
+		process.stdout.write('Progress: ' + `${valFn()}`.green);
+	}, 500);
+}
+
+function clearProgress(interval) {
+	clearInterval(interval);
+	Readline.clearLine(process.stdout, 0);
+	Readline.cursorTo(process.stdout, 0);
+}
+
 
 module.exports = {
-	readDirSync
+	readDirSync,
+	showProgress,
+	clearProgress
 }

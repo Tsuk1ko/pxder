@@ -2,8 +2,10 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 14:49:30 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-09-20 17:34:49
+ * @Last Modified time: 2018-11-22 01:07:09
  */
+
+let pixiv;
 
 /**
  * 插画
@@ -26,6 +28,10 @@ class Illust {
 		this.file = file;
 	}
 
+	static setPixiv(p) {
+		pixiv = p;
+	}
+
 	getObject() {
 		return {
 			id: this.id,
@@ -41,7 +47,7 @@ class Illust {
 	 * @param {*} illustJSON 插画JSON对象
 	 * @returns 插画列表
 	 */
-	static getIllusts(illustJSON) {
+	static async getIllusts(illustJSON) {
 		let illusts = [];
 		//得到插画信息
 		let title = illustJSON.title.replace(/[\x00-\x1F\x7F]/g, '');
@@ -49,20 +55,22 @@ class Illust {
 		let id = illustJSON.id;
 		//动图的话是一个压缩包
 		if (illustJSON.type == "ugoira") {
-			illusts.push(new Illust(id, title, illustJSON.meta_single_page.original_image_url.replace('img-original', 'img-zip-ugoira').replace(/_ugoira0\.(.*)/, '_ugoira1920x1080.zip'), '(' + id + ')' + fileName + '.zip'));
+			let uDelay;
+			await pixiv.ugoiraMetaData(id).then(ret => uDelay = ret.ugoira_metadata.frames[0].delay);
+			illusts.push(new Illust(id, title, illustJSON.meta_single_page.original_image_url.replace('img-original', 'img-zip-ugoira').replace(/_ugoira0\.(.*)/, '_ugoira1920x1080.zip'), `(${id})${fileName}@${uDelay}ms.zip`));
 		} else {
 			if (illustJSON.meta_pages.length > 0) {
 				//组图
 				for (let pi in illustJSON.meta_pages) {
 					let url = illustJSON.meta_pages[pi].image_urls.original;
 					let ext = url.substr(url.lastIndexOf('.')); //图片扩展名
-					illusts.push(new Illust(id, title + '_p' + pi, url, '(' + id + ')' + fileName + '_p' + pi + ext));
+					illusts.push(new Illust(id, title + '_p' + pi, url, `(${id})${fileName}_p${pi}${ext}`));
 				}
 			} else if (illustJSON.meta_single_page.original_image_url) {
 				let url = illustJSON.meta_single_page.original_image_url;
 				let ext = url.substr(url.lastIndexOf('.')); //图片扩展名
 				//单图
-				illusts.push(new Illust(id, title, url, '(' + id + ')' + fileName + ext));
+				illusts.push(new Illust(id, title, url, `(${id})${fileName}${ext}`));
 			}
 		}
 		//结果

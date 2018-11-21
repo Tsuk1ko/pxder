@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-13 15:38:50 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-08-30 23:58:18
+ * @Last Modified time: 2018-11-21 23:00:37
  */
 
 const Illust = require('./illust');
@@ -19,21 +19,21 @@ class Illustrator {
 	 *Creates an instance of Illustrator.
 	 * @param {*} uid 画师UID
 	 * @param {string} [uname=''] 画师名字
-	 * @param {*} [illustsJSON=false] 画师画作JSON
 	 * @memberof Illustrator
 	 */
-	constructor(uid, uname = '', illustsJSON = false) {
+	constructor(uid, uname = '') {
 		this.id = uid;
 		this.name = uname;
 		this.next = {
 			illust: null,
 			bookmark: null
 		}
-		if (illustsJSON) {
-			this.exampleIllusts = [];
-			for (let illustJSON of illustsJSON) {
-				this.exampleIllusts = this.exampleIllusts.concat(Illust.getIllusts(illustJSON));
-			}
+	}
+
+	async setExampleIllusts(illustsJSON) {
+		this.exampleIllusts = [];
+		for (let illustJSON of illustsJSON) {
+			await Illust.getIllusts(illustJSON).then(ret => this.exampleIllusts = this.exampleIllusts.concat(ret));
 		}
 	}
 
@@ -86,7 +86,7 @@ class Illustrator {
 
 		//数据整合
 		for (let illust of json.illusts) {
-			result = result.concat(Illust.getIllusts(illust));
+			await Illust.getIllusts(illust).then(ret => result = result.concat(ret));
 		}
 
 		this.next[type] = json.next_url;
