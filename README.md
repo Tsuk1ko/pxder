@@ -87,7 +87,7 @@ pxder --setting
   如果输入空行则关闭代理
 
 
-注：配置文件存放路径由 [appdata-path](https://www.npmjs.com/package/appdata-path) 决定，位于该路径下的`pxder`文件夹内
+注：配置文件存放路径可通过命令`pxder --conf-loca`查看
 
 
 ## 运行机制
