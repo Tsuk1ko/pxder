@@ -1,8 +1,8 @@
 /*
  * @Author: Jindai Kirin
  * @Date: 2018-08-23 08:44:16
- * @Last modified by:   simon3000
- * @Last modified time: 2018-09-06 22:46:58
+ * @Last Modified by: Jindai Kirin
+ * @Last Modified time: 2018-11-21 21:54:30
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -157,7 +157,7 @@ async function downloadByBookmark(me, isPrivate = false) {
  * @returns 成功下载的画作数
  */
 function downloadIllusts(illusts, dldir, totalThread) {
-	let tempDir = Path.join(dldir, "temp");
+	let tempDir = config.tmp;
 	let totalI = 0;
 
 	//清除残留的临时文件
@@ -194,7 +194,10 @@ function downloadIllusts(illusts, dldir, totalThread) {
 			//开始下载
 			console.log("  [%d]\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
 			async function tryDownload(times) {
-				if (times > 10) return;
+				if (times > 10) {
+					console.error("\n" + "Network error!".red);
+					process.exit();
+				}
 				//失败重试
 				return NekoTools.download(tempDir, illust.file, illust.url, options).then(async res => {
 					//文件完整性校验
@@ -202,14 +205,14 @@ function downloadIllusts(illusts, dldir, totalThread) {
 					let dlFile = Path.join(tempDir, illust.file);
 					for (let i = 0; i < 15 && !Fs.existsSync(dlFile); i++) await sleep(200); //不明bug
 					let dlFileSize = Fs.statSync(dlFile).size;
-					if (dlFileSize == fileSize) Fs.renameSync(dlFile, Path.join(dldir, illust.file));
+					if (dlFileSize == fileSize) Fse.moveSync(dlFile, Path.join(dldir, illust.file));
 					else {
 						//console.log(res.headers);
 						Fs.unlinkSync(dlFile);
 						throw new Error('Incomplete download');
 					}
 				}).catch((e) => {
-					//console.log(e)
+					if (global.p_debug) console.log(e);
 					console.log("  " + (times >= 10 ? "[%d]".bgRed : "[%d]".bgYellow) + "\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
 					return tryDownload(times + 1);
 				});
@@ -221,7 +224,7 @@ function downloadIllusts(illusts, dldir, totalThread) {
 		//开始多线程
 		for (let t = 0; t < totalThread; t++)
 			singleThread(t).catch(e => {
-				reject(e);
+				if (global.p_debug) console.log(e);
 			});
 	});
 }

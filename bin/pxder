@@ -3,7 +3,6 @@
 'use strict';
 
 require('colors');
-const Fs = require('fs');
 const Pixiv = require('../src/index');
 const pkg = require('../package.json');
 
@@ -29,6 +28,8 @@ program.usage('<options> [value]')
 	.option('-B, --bookmark-private', 'download / update illusts from your private bookmark')
 	.option('-U, --update', 'update illustrators\' illusts in your download path')
 	.option('')
+	.option('    --debug', 'output all error messages')
+	.option('    --conf-loca', 'output the location of config and exit')
 	.version(pkg.version, '-v, --version')
 	.parse(process.argv);
 
@@ -39,11 +40,18 @@ program.usage('<options> [value]')
 let config = Pixiv.readConfig();
 
 handleArgv().then(async () => {
+	if (program.confLoca) {
+		console.log(require('appdata-path').getAppDataPath('pxder'));
+		process.exit();
+	}
+
 	//检查配置
 	if (!Pixiv.checkConfig(config)) {
 		console.log('\nRun ' + 'pxder -h'.yellow + ' for more usage information.\n')
 		process.exit();
 	}
+
+	if (program.debug) global.p_debug = true;
 
 	//重登陆
 	let pixiv = new Pixiv();
@@ -83,8 +91,11 @@ handleArgv().then(async () => {
 
 	pixiv.clearReloginInterval();
 }).catch(e => {
-	if (e.errors && e.errors.system && e.errors.system.message) console.error('\nERROR: '.red + e.errors.system.message + '\n');
-	else console.error(e);
+	if (global.p_debug) console.error(e);
+	else {
+		if (e.errors && e.errors.system && e.errors.system.message) console.error('\nERROR: '.red + e.errors.system.message + '\n');
+		else console.error(e);
+	}
 	process.exit();
 });
 
