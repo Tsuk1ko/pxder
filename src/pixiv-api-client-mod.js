@@ -26,7 +26,7 @@ SOFTWARE.
 
 'use strict';
 
-const axios = require('axios');
+let axios = require('axios');
 const qs = require('qs');
 
 const BASE_URL = 'https://app-api.pixiv.net';
@@ -34,11 +34,8 @@ const CLIENT_ID = 'KzEZED7aC0vird8jWyHM38mXjNTY';
 const CLIENT_SECRET = 'W9JZoJe00qPvJsiyCGT3CCtC6ZUtdpKpzMbNlUGP';
 const filter = 'for_ios';
 
-let httpsAgent = false;
-
 function callApi(url, options) {
 	const finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
-	if(httpsAgent) options.httpsAgent=httpsAgent;
 	return axios(finalUrl, options).then(res => res.data).catch(err => {
 		if (err.response) {
 			throw err.response.data;
@@ -60,7 +57,9 @@ class PixivApi {
 	}
 
 	static setAgent(agent) {
-		httpsAgent = agent;
+		axios = require('axios').create({
+			httpsAgent: agent
+		});
 	}
 
 	login(username, password, rememberPassword) {
@@ -85,7 +84,6 @@ class PixivApi {
 			},
 			data,
 		};
-		if (httpsAgent) options.httpsAgent = httpsAgent;
 		return axios('https://oauth.secure.pixiv.net/auth/token', options)
 			.then(res => {
 				this.auth = res.data.response;
@@ -136,7 +134,6 @@ class PixivApi {
 			},
 			data,
 		};
-		if(httpsAgent) options.httpsAgent=httpsAgent;
 		return axios('https://oauth.secure.pixiv.net/auth/token', options)
 			.then(res => {
 				this.auth = res.data.response;
@@ -169,7 +166,6 @@ class PixivApi {
 			},
 			data,
 		};
-		if(httpsAgent) options.httpsAgent=httpsAgent;
 		return axios(
 				'https://accounts.pixiv.net/api/provisional-accounts/create',
 				options

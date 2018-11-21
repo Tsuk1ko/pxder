@@ -1,8 +1,8 @@
 /*
  * @Author: Jindai Kirin
  * @Date: 2018-08-14 14:34:13
- * @Last modified by:   simon3000
- * @Last modified time: 2018-09-06 22:28:31
+ * @Last Modified by: Jindai Kirin
+ * @Last Modified time: 2018-11-21 21:49:22
  */
 
 require('colors');
@@ -104,12 +104,13 @@ class PixivFunc {
 	 */
 	static applyConfig(config) {
 		__config = config;
+		config.download.tmp = Path.join(configFileDir, "tmp");
 		Downloader.setConfig(config.download);
 		let proxy = config.proxy;
 		let agent = false;
 		if (typeof (proxy) == "string") {
 			if (proxy.search('http://') === 0) agent = new HttpsProxyAgent(proxy);
-			else if (proxy.search('socks://') === 0) agent = new SocksProxyAgent(proxy);
+			else if (proxy.search('socks://') === 0) agent = new SocksProxyAgent(proxy, true);
 		}
 		if (agent) {
 			Downloader.setAgent(agent);
