@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-23 08:44:16
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-11-22 00:36:04
+ * @Last Modified time: 2018-11-22 19:55:47
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -168,6 +168,7 @@ function downloadIllusts(illusts, dldir, totalThread) {
 	//开始多线程下载
 	return new Promise((resolve, reject) => {
 		let doneThread = 0;
+		let errorThread = 0;
 
 		//单个线程
 		async function singleThread(threadID) {
@@ -197,8 +198,10 @@ function downloadIllusts(illusts, dldir, totalThread) {
 			console.log("  [%d]\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
 			async function tryDownload(times) {
 				if (times > 10) {
-					console.error("\n" + "Network error!".red);
-					process.exit();
+					if (errorThread > 1) {
+						console.error("\n" + "Network error!".red);
+						process.exit();
+					} else return;
 				}
 				//失败重试
 				return NekoTools.download(tempDir, illust.file, illust.url, options).then(async res => {
@@ -209,11 +212,12 @@ function downloadIllusts(illusts, dldir, totalThread) {
 					let dlFileSize = Fs.statSync(dlFile).size;
 					if (dlFileSize == fileSize) Fse.moveSync(dlFile, Path.join(dldir, illust.file));
 					else {
-						//console.log(res.headers);
 						Fs.unlinkSync(dlFile);
 						throw new Error('Incomplete download');
 					}
+					if (times != 1) errorThread--;
 				}).catch((e) => {
+					if (times == 1) errorThread++;
 					if (global.p_debug) console.log(e);
 					console.log("  " + (times >= 10 ? "[%d]".bgRed : "[%d]".bgYellow) + "\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
 					return tryDownload(times + 1);
