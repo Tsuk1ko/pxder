@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-23 08:44:16
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-11-22 19:55:47
+ * @Last Modified time: 2018-11-24 12:34:55
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -42,7 +42,7 @@ async function downloadByIllustrators(illustrators, callback) {
 
 		await illustrator.info();
 
-		console.log("\nCollecting illusts of " + (parseInt(i) + 1).toString().green + "/" + illustrators.length + " uid=".gray + illustrator.id.toString().cyan + " " + illustrator.name.yellow);
+		console.log("\nCollecting illusts of " + (parseInt(i) + 1).toString().green + "/" + illustrators.length + " uid ".gray + illustrator.id.toString().cyan + " " + illustrator.name.yellow);
 
 		//取得下载信息
 		await getDownloadListByIllustrator(illustrator).then(ret => info = ret);
@@ -169,6 +169,9 @@ function downloadIllusts(illusts, dldir, totalThread) {
 	return new Promise((resolve, reject) => {
 		let doneThread = 0;
 		let errorThread = 0;
+		let pause = false;
+		let hangup = 5 * 60 * 1000;
+		let errorTimeout = null;
 
 		//单个线程
 		async function singleThread(threadID) {
@@ -195,13 +198,21 @@ function downloadIllusts(illusts, dldir, totalThread) {
 			if (httpsAgent) options.httpsAgent = httpsAgent;
 
 			//开始下载
-			console.log("  [%d]\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
+			console.log("  [%d]\t%s/%d\t" + " pid ".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
 			async function tryDownload(times) {
 				if (times > 10) {
 					if (errorThread > 1) {
-						console.error("\n" + "Network error!".red);
-						process.exit();
+						if (errorTimeout) clearTimeout(errorTimeout);
+						errorTimeout = setTimeout(() => {
+							console.log("\n" + "Network error! Pause 5 minutes.".red + "\n");
+						}, 1000);
+						pause = true;
 					} else return;
+				}
+				if (pause) {
+					times = 1;
+					await sleep(hangup);
+					pause = false;
 				}
 				//失败重试
 				return NekoTools.download(tempDir, illust.file, illust.url, options).then(async res => {
