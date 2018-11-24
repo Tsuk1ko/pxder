@@ -144,9 +144,9 @@ async function handleArgv() {
 					break;
 
 				case 1: //下载线程
-					config.download.thread = getStrictIntInput('Please input the number of download thread:'.yellow + ' [1-10, default is 5]\n', {
+					config.download.thread = getStrictIntInput('Please input the number of download thread:'.yellow + ' [1-32, default is 5]\n', {
 						defaultInput: 5
-					}, input => (input >= 1 && input <= 10), 'It must be between 1 and 10.');
+					}, input => (input >= 1 && input <= 32), 'It must be between 1 and 32.');
 					break;
 
 				case 2: //下载超时
