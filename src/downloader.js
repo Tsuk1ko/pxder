@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-23 08:44:16
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-11-24 12:34:55
+ * @Last Modified time: 2018-12-07 20:02:45
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -166,84 +166,80 @@ function downloadIllusts(illusts, dldir, totalThread) {
 	if (Fs.existsSync(tempDir)) Fse.removeSync(tempDir);
 
 	//开始多线程下载
-	return new Promise((resolve, reject) => {
-		let doneThread = 0;
-		let errorThread = 0;
-		let pause = false;
-		let hangup = 5 * 60 * 1000;
-		let errorTimeout = null;
+	let errorThread = 0;
+	let pause = false;
+	let hangup = 5 * 60 * 1000;
+	let errorTimeout = null;
 
-		//单个线程
-		async function singleThread(threadID) {
-			let i = totalI++;
-			let illust = illusts[i];
+	//单个线程
+	function singleThread(threadID) {
+		return new Promise(async resolve => {
+			while (true) {
+				let i = totalI++;
+				//线程终止
+				if (i >= illusts.length) return resolve(threadID);
 
-			//线程终止
-			if (!illust) {
-				//当最后一个线程终止时结束递归
-				if ((++doneThread) >= totalThread) {
-					//if (Fs.existsSync(tempDir)) Fse.removeSync(tempDir);
-					resolve();
-				}
-				return;
-			}
+				let illust = illusts[i];
 
-			let options = {
-				headers: {
-					referer: pixivRefer
-				},
-				timeout: 1000 * config.timeout
-			};
-			//代理
-			if (httpsAgent) options.httpsAgent = httpsAgent;
+				let options = {
+					headers: {
+						referer: pixivRefer
+					},
+					timeout: 1000 * config.timeout
+				};
+				//代理
+				if (httpsAgent) options.httpsAgent = httpsAgent;
 
-			//开始下载
-			console.log("  [%d]\t%s/%d\t" + " pid ".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
-			async function tryDownload(times) {
-				if (times > 10) {
-					if (errorThread > 1) {
-						if (errorTimeout) clearTimeout(errorTimeout);
-						errorTimeout = setTimeout(() => {
-							console.log("\n" + "Network error! Pause 5 minutes.".red + "\n");
-						}, 1000);
-						pause = true;
-					} else return;
-				}
-				if (pause) {
-					times = 1;
-					await sleep(hangup);
-					pause = false;
-				}
-				//失败重试
-				return NekoTools.download(tempDir, illust.file, illust.url, options).then(async res => {
-					//文件完整性校验
-					let fileSize = res.headers['content-length'];
-					let dlFile = Path.join(tempDir, illust.file);
-					for (let i = 0; i < 15 && !Fs.existsSync(dlFile); i++) await sleep(200); //不明bug
-					let dlFileSize = Fs.statSync(dlFile).size;
-					if (dlFileSize == fileSize) Fse.moveSync(dlFile, Path.join(dldir, illust.file));
-					else {
-						Fs.unlinkSync(dlFile);
-						throw new Error('Incomplete download');
+				//开始下载
+				console.log(`  [${threadID}]\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${"pid".gray} ${illust.id.toString().cyan}\t${illust.title.yellow}`);
+				await (async function tryDownload(times) {
+					if (times > 10) {
+						if (errorThread > 1) {
+							if (errorTimeout) clearTimeout(errorTimeout);
+							errorTimeout = setTimeout(() => {
+								console.log("\n" + "Network error! Pause 5 minutes.".red + "\n");
+							}, 1000);
+							pause = true;
+						} else return;
 					}
-					if (times != 1) errorThread--;
-				}).catch((e) => {
-					if (times == 1) errorThread++;
-					if (global.p_debug) console.log(e);
-					console.log("  " + (times >= 10 ? "[%d]".bgRed : "[%d]".bgYellow) + "\t%s/%d\t" + " pid=".gray + "%s\t%s", threadID, (parseInt(i) + 1).toString().green, illusts.length, illust.id.toString().cyan, illust.title.yellow);
-					return tryDownload(times + 1);
-				});
+					if (pause) {
+						times = 1;
+						await sleep(hangup);
+						pause = false;
+					}
+					//失败重试
+					return NekoTools.download(tempDir, illust.file, illust.url, options).then(async res => {
+						//文件完整性校验
+						let fileSize = res.headers['content-length'];
+						let dlFile = Path.join(tempDir, illust.file);
+						for (let i = 0; i < 15 && !Fs.existsSync(dlFile); i++) await sleep(200); //不明bug
+						let dlFileSize = Fs.statSync(dlFile).size;
+						if (dlFileSize == fileSize) Fse.moveSync(dlFile, Path.join(dldir, illust.file));
+						else {
+							Fs.unlinkSync(dlFile);
+							throw new Error('Incomplete download');
+						}
+						if (times != 1) errorThread--;
+					}).catch((e) => {
+						if (times == 1) errorThread++;
+						if (global.p_debug) console.log(e);
+						console.log(`  ${times >= 10 ? `[${threadID}]`.bgRed : `[${threadID}]`.bgYellow}\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${"pid".gray} ${illust.id.toString().cyan}\t${illust.title.yellow}`, threadID);
+						return tryDownload(times + 1);
+					});
+				})(1);
 			}
-			await tryDownload(1);
-			singleThread(threadID);
-		}
+		});
+	}
 
-		//开始多线程
-		for (let t = 0; t < totalThread; t++)
-			singleThread(t).catch(e => {
-				if (global.p_debug) console.log(e);
-			});
-	});
+	let threads = [];
+
+	//开始多线程
+	for (let t = 0; t < totalThread; t++)
+		threads.push(singleThread(t).catch(e => {
+			if (global.p_debug) console.log(e);
+		}));
+
+	return Promise.all(threads);
 }
 
 
@@ -304,11 +300,9 @@ async function downloadByIllusts(illustJSON) {
 }
 
 
-async function sleep(ms) {
+function sleep(ms) {
 	return new Promise(resolve => {
-		setTimeout(() => {
-			resolve();
-		}, ms);
+		setTimeout(resolve, ms);
 	});
 }
 
