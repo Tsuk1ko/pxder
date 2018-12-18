@@ -181,3 +181,10 @@ pxder -p pid1,pid2,pid3,...
 ```bash
 pxder -p 70593670,70594912,70595516
 ```
+
+## 捐赠
+| 支付宝 | 微信 |
+|:-:|:-:|
+| ![](https://i.loli.net/2018/12/18/5c18cbe8535f2.gif) | ![](https://i.loli.net/2018/12/18/5c18cbe3a9cb7.png) |
+
+感谢每一位捐赠者 XD
