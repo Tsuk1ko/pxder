@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-23 14:49:30 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-11-22 01:07:09
+ * @Last Modified time: 2019-03-18 15:40:44
  */
 
 let pixiv;
@@ -51,12 +51,12 @@ class Illust {
 		let illusts = [];
 		//得到插画信息
 		let title = illustJSON.title.replace(/[\x00-\x1F\x7F]/g, '');
-		let fileName = title.replace(/[/\\:*?"<>|.&\$]/g, ''); //适合的文件名
+		let fileName = title.replace(/[\/\\:*?"<>|.&\$]/g, ''); //适合的文件名
 		let id = illustJSON.id;
 		//动图的话是一个压缩包
 		if (illustJSON.type == "ugoira") {
 			let uDelay;
-			await pixiv.ugoiraMetaData(id).then(ret => uDelay = ret.ugoira_metadata.frames[0].delay);
+			uDelay = await pixiv.ugoiraMetaData(id).then(ret => ret.ugoira_metadata.frames[0].delay);
 			illusts.push(new Illust(id, title, illustJSON.meta_single_page.original_image_url.replace('img-original', 'img-zip-ugoira').replace(/_ugoira0\.(.*)/, '_ugoira1920x1080.zip'), `(${id})${fileName}@${uDelay}ms.zip`));
 		} else {
 			if (illustJSON.meta_pages.length > 0) {

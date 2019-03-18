@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-14 14:34:13
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-11-22 00:34:37
+ * @Last Modified time: 2019-03-18 15:45:14
  */
 
 require('colors');
@@ -240,7 +240,7 @@ class PixivFunc {
 		let processDisplay = Tools.showProgress(() => follows.length);
 
 		do {
-			await this.getMyFollow(isPrivate).then(ret => follows = follows.concat(ret));
+			follows = follows.concat(await this.getMyFollow(isPrivate));
 		} while (this.followNextUrl);
 
 		Tools.clearProgress(processDisplay);
@@ -364,7 +364,7 @@ class PixivFunc {
 	async downloadByPIDs(pids) {
 		let jsons = [];
 		for (let pid of pids) {
-			await this.pixiv.illustDetail(pid).then(json => jsons.push(json.illust));
+			jsons.push(await this.pixiv.illustDetail(pid).then(json => json.illust));
 		}
 		await Downloader.downloadByIllusts(jsons);
 	}

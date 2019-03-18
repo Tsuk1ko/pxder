@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-13 15:38:50 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-11-21 23:00:37
+ * @Last Modified time: 2019-03-18 15:37:47
  */
 
 const Illust = require('./illust');
@@ -27,13 +27,13 @@ class Illustrator {
 		this.next = {
 			illust: null,
 			bookmark: null
-		}
+		};
 	}
 
 	async setExampleIllusts(illustsJSON) {
 		this.exampleIllusts = [];
 		for (let illustJSON of illustsJSON) {
-			await Illust.getIllusts(illustJSON).then(ret => this.exampleIllusts = this.exampleIllusts.concat(ret));
+			this.exampleIllusts = this.exampleIllusts.concat(await Illust.getIllusts(illustJSON));
 		}
 	}
 
@@ -53,9 +53,9 @@ class Illustrator {
 			userData = {
 				id: this.id,
 				name: this.name
-			}
+			};
 		} else {
-			await pixiv.userDetail(this.id).then(ret => userData = ret.user);
+			userData = await pixiv.userDetail(this.id).then(ret => ret.user);
 			this.name = userData.name;
 		}
 		return userData;
@@ -75,18 +75,18 @@ class Illustrator {
 
 		//请求
 		if (this.next[type])
-			await pixiv.requestUrl(this.next[type]).then(ret => json = ret);
+			json = await pixiv.requestUrl(this.next[type]);
 		else {
-			if (type == 'illust') await pixiv.userIllusts(this.id).then(ret => json = ret);
+			if (type == 'illust') json = await pixiv.userIllusts(this.id);
 			else if (type == 'bookmark') {
-				if (option) await pixiv.userBookmarksIllust(this.id, option).then(ret => json = ret);
-				else await pixiv.userBookmarksIllust(this.id).then(ret => json = ret);
+				if (option) json = await pixiv.userBookmarksIllust(this.id, option);
+				else json = await pixiv.userBookmarksIllust(this.id);
 			}
 		}
 
 		//数据整合
 		for (let illust of json.illusts) {
-			await Illust.getIllusts(illust).then(ret => result = result.concat(ret));
+			result = result.concat(await Illust.getIllusts(illust));
 		}
 
 		this.next[type] = json.next_url;

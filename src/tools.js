@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin 
  * @Date: 2018-08-14 15:53:22 
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-11-22 00:36:09
+ * @Last Modified time: 2019-03-18 15:55:54
  */
 
 const Fs = require("fs");
@@ -42,4 +42,4 @@ module.exports = {
 	readDirSync,
 	showProgress,
 	clearProgress
-}
+};

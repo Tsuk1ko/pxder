@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-23 08:44:16
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2018-12-07 20:02:45
+ * @Last Modified time: 2019-03-18 15:57:49
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -38,14 +38,13 @@ function setAgent(agent) {
 async function downloadByIllustrators(illustrators, callback) {
 	for (let i in illustrators) {
 		let illustrator = illustrators[i];
-		let info;
 
 		await illustrator.info();
 
 		console.log("\nCollecting illusts of " + (parseInt(i) + 1).toString().green + "/" + illustrators.length + " uid ".gray + illustrator.id.toString().cyan + " " + illustrator.name.yellow);
 
 		//取得下载信息
-		await getDownloadListByIllustrator(illustrator).then(ret => info = ret);
+		let info = await getDownloadListByIllustrator(illustrator);
 
 		//下载
 		await downloadIllusts(info.illusts, Path.join(config.path, info.dir), config.thread);
@@ -66,8 +65,7 @@ async function getDownloadListByIllustrator(illustrator) {
 	let illusts = [];
 
 	//得到画师下载目录
-	let dir;
-	await illustrator.info().then(getIllustratorNewDir).then(ret => dir = ret);
+	let dir = await illustrator.info().then(getIllustratorNewDir);
 
 	//最新画作检查
 	let exampleIllusts = illustrator.exampleIllusts;
@@ -81,7 +79,7 @@ async function getDownloadListByIllustrator(illustrator) {
 			return {
 				dir,
 				illusts: illusts.reverse()
-			}
+			};
 		}
 	}
 
@@ -93,8 +91,7 @@ async function getDownloadListByIllustrator(illustrator) {
 	let cnt;
 	do {
 		cnt = 0;
-		let temps;
-		await illustrator.illusts().then(ret => temps = ret);
+		let temps = await illustrator.illusts();
 		for (let temp of temps) {
 			if (!Fs.existsSync(Path.join(config.path, dir, temp.file))) {
 				illusts.push(temp);
@@ -108,7 +105,7 @@ async function getDownloadListByIllustrator(illustrator) {
 	return {
 		dir,
 		illusts: illusts.reverse()
-	}
+	};
 }
 
 
@@ -133,8 +130,7 @@ async function downloadByBookmark(me, isPrivate = false) {
 	let cnt;
 	do {
 		cnt = 0;
-		let temps;
-		await me.bookmarks(isPrivate).then(ret => temps = ret);
+		let temps = await me.bookmarks(isPrivate);
 		for (let temp of temps) {
 			if (!Fs.existsSync(Path.join(config.path, dir, temp.file))) {
 				illusts.push(temp);
@@ -269,7 +265,7 @@ async function getIllustratorNewDir(data) {
 	let iName = data.name;
 	let nameExtIndex = iName.search(/@|＠/);
 	if (nameExtIndex >= 1) iName = iName.substring(0, nameExtIndex);
-	iName = iName.replace(/[/\\:*?"<>|.&\$]/g, '').replace(/[ ]+$/, '');
+	iName = iName.replace(/[\/\\:*?"<>|.&\$]/g, '').replace(/[ ]+$/, '');
 	let dldirNew = '(' + data.id + ')' + iName;
 
 	//决定下载目录
@@ -294,7 +290,7 @@ async function downloadByIllusts(illustJSON) {
 	console.log();
 	let illusts = [];
 	for (let json of illustJSON) {
-		await Illust.getIllusts(json).then(ret => illusts = illusts.concat(ret));
+		illusts = illusts.concat(await Illust.getIllusts(json));
 	}
 	await downloadIllusts(illusts, Path.join(config.path, 'PID'), config.thread);
 }
