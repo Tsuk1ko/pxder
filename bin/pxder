@@ -4,6 +4,7 @@
 
 require('colors');
 const Pixiv = require('../src/index');
+const CheckUpdate = require('../src/checkUpdate');
 const pkg = require('../package.json');
 
 let program = require('commander');
@@ -90,6 +91,15 @@ handleArgv().then(async () => {
 			program.uid || program.pid)) help();
 
 	pixiv.clearReloginInterval();
+	console.log();
+
+	//检查更新
+	CheckUpdate.init();
+	let laterVersion = await CheckUpdate.check();
+	if(laterVersion){
+		console.log(`New version ${laterVersion.yellow} is available.`);
+		console.log(`You can upgrade via the '${'npm i -g pxder'.yellow}' command.\n`);
+	}
 }).catch(e => {
 	if (global.p_debug) console.error(e);
 	else {
