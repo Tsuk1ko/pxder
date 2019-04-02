@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-23 08:44:16
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2019-03-18 15:57:49
+ * @Last Modified time: 2019-04-02 13:50:32
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -39,7 +39,11 @@ async function downloadByIllustrators(illustrators, callback) {
 	for (let i in illustrators) {
 		let illustrator = illustrators[i];
 
-		await illustrator.info();
+		let error = await illustrator.info().catch(e => e);
+		if (typeof error == 'string' && error.indexOf('404') >= 0) {
+			console.log('\nIllustrator ' + 'uid '.gray + illustrator.id.toString().cyan + ' may have left pixiv or does not exist');
+			continue;
+		}
 
 		console.log("\nCollecting illusts of " + (parseInt(i) + 1).toString().green + "/" + illustrators.length + " uid ".gray + illustrator.id.toString().cyan + " " + illustrator.name.yellow);
 
@@ -217,9 +221,12 @@ function downloadIllusts(illusts, dldir, totalThread) {
 						}
 						if (times != 1) errorThread--;
 					}).catch((e) => {
-						if (times == 1) errorThread++;
+						if (e && e.response && e.response.status == 404) {
+							console.log('  ' + '404'.bgRed + `\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${"pid".gray} ${illust.id.toString().cyan}\t${illust.title.yellow}`);
+							return;
+						} else if (times == 1) errorThread++;
 						if (global.p_debug) console.log(e);
-						console.log(`  ${times >= 10 ? `[${threadID}]`.bgRed : `[${threadID}]`.bgYellow}\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${"pid".gray} ${illust.id.toString().cyan}\t${illust.title.yellow}`, threadID);
+						console.log(`  ${times >= 10 ? `[${threadID}]`.bgRed : `[${threadID}]`.bgYellow}\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${"pid".gray} ${illust.id.toString().cyan}\t${illust.title.yellow}`);
 						return tryDownload(times + 1);
 					});
 				})(1);
