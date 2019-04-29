@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-14 14:34:13
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2019-03-18 15:45:14
+ * @Last Modified time: 2019-04-02 16:06:51
  */
 
 require('colors');
@@ -10,6 +10,7 @@ const PixivApi = require('./pixiv-api-client-mod');
 const Downloader = require('./downloader');
 const Illustrator = require('./illustrator');
 const Fs = require('fs');
+const Fse = require('fs-extra');
 const Path = require('path');
 const Tools = require('./tools');
 
@@ -35,14 +36,13 @@ class PixivFunc {
 	 */
 	static initConfig(forceInit = false) {
 		if (!Fs.existsSync(configFileDir)) Fs.mkdirSync(configFileDir);
-		if (!Fs.existsSync(configFile) || forceInit)
-			Fs.writeFileSync(configFile, JSON.stringify({
-				download: {
-					thread: 5,
-					timeout: 30,
-					autoRename: false
-				}
-			}));
+		if (!Fs.existsSync(configFile) || forceInit) Fse.writeJSONSync(configFile, {
+			download: {
+				thread: 5,
+				timeout: 30,
+				autoRename: false
+			}
+		});
 	}
 
 	/**
