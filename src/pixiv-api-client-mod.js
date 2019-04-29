@@ -46,7 +46,9 @@ function callApi(url, options) {
 			console.error('Connection reset detected.'.gray);
 			return callApi(url, options);
 		} else {
-			throw err.message;
+			let response = err.response;
+			delete response.request;
+			throw response;
 		}
 	});
 }
@@ -100,13 +102,6 @@ class PixivApi {
 					this.password = password;
 				}
 				return res.data.response;
-			})
-			.catch(err => {
-				if (err.response) {
-					throw err.response.data;
-				} else {
-					throw err.message;
-				}
 			});
 	}
 
@@ -144,13 +139,6 @@ class PixivApi {
 			.then(res => {
 				this.auth = res.data.response;
 				return res.data.response;
-			})
-			.catch(err => {
-				if (err.response) {
-					throw err.response.data;
-				} else {
-					throw err.message;
-				}
 			});
 	}
 
@@ -176,14 +164,7 @@ class PixivApi {
 				'https://accounts.pixiv.net/api/provisional-accounts/create',
 				options
 			)
-			.then(res => res.data.body)
-			.catch(err => {
-				if (err.response) {
-					throw err.response.data;
-				} else {
-					throw err.message;
-				}
-			});
+			.then(res => res.data.body);
 	}
 
 	// require auth
@@ -1029,17 +1010,7 @@ class PixivApi {
 		if (this.auth && this.auth.access_token) {
 			options.headers.Authorization = `Bearer ${this.auth.access_token}`;
 		}
-		return callApi(url, options).then(json => json).catch(err => {
-			if (this.rememberPassword) {
-				if (this.username && this.password) {
-					return this.login(this.username, this.password).then(() => {
-						options.headers.Authorization = `Bearer ${this.auth.access_token}`;
-						return callApi(url, options);
-					});
-				}
-			}
-			throw err;
-		});
+		return callApi(url, options).then(json => json);
 	}
 }
 
