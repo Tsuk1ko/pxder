@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-23 08:44:16
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2019-04-02 13:50:32
+ * @Last Modified time: 2019-06-19 01:22:42
  */
 
 const NekoTools = require('crawl-neko').getTools();
@@ -54,7 +54,7 @@ async function downloadByIllustrators(illustrators, callback) {
 		await downloadIllusts(info.illusts, Path.join(config.path, info.dir), config.thread);
 
 		//回调
-		if (typeof (callback) == 'function') callback(i);
+		if (typeof(callback) == 'function') callback(i);
 	}
 }
 
@@ -212,7 +212,9 @@ function downloadIllusts(illusts, dldir, totalThread) {
 						//文件完整性校验
 						let fileSize = res.headers['content-length'];
 						let dlFile = Path.join(tempDir, illust.file);
-						for (let i = 0; i < 15 && !Fs.existsSync(dlFile); i++) await sleep(200); //不明bug
+						//针对Linux文件系统不明bug
+						await sleep(1000);
+						for (let i = 0; i < 15 && !Fs.existsSync(dlFile); i++) await sleep(200);
 						let dlFileSize = Fs.statSync(dlFile).size;
 						if (dlFileSize == fileSize) Fse.moveSync(dlFile, Path.join(dldir, illust.file));
 						else {
