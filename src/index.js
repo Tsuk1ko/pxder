@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-14 14:34:13
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2019-04-02 16:06:51
+ * @Last Modified time: 2019-06-30 23:51:42
  */
 
 require('colors');
@@ -108,7 +108,7 @@ class PixivFunc {
 		Downloader.setConfig(config.download);
 		let proxy = config.proxy;
 		let agent = false;
-		if (typeof (proxy) == "string") {
+		if (typeof(proxy) == "string") {
 			if (proxy.search('http://') === 0) agent = new HttpsProxyAgent(proxy);
 			else if (proxy.search('socks://') === 0) agent = new SocksProxyAgent(proxy, true);
 		}
@@ -238,8 +238,12 @@ class PixivFunc {
 		let follows = [];
 
 		let processDisplay = Tools.showProgress(() => follows.length);
+		let count = 0;
 
 		do {
+			// Offset must be no more than 5000
+			count += 30;
+			if (count >= 5000) break;
 			follows = follows.concat(await this.getMyFollow(isPrivate));
 		} while (this.followNextUrl);
 
