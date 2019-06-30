@@ -48,7 +48,7 @@ handleArgv().then(async () => {
 
 	//检查配置
 	if (!Pixiv.checkConfig(config)) {
-		console.log('\nRun ' + 'pxder -h'.yellow + ' for more usage information.\n')
+		console.log('\nRun ' + 'pxder -h'.yellow + ' for more usage information.\n');
 		process.exit();
 	}
 
@@ -120,7 +120,7 @@ async function handleArgv() {
 		let p = readline.question('Password: '.yellow, {
 			hideEchoBack: true
 		});
-		await Pixiv.login(u, p)
+		await Pixiv.login(u, p);
 		console.log('\nLogin success!\n'.green);
 	} else if (program.logout) {
 		//登出
@@ -166,7 +166,7 @@ async function handleArgv() {
 					break;
 
 				case 3: //自动重命名
-					config.download.autoRename = readline.keyInYNStrict('Do you want to turn on auto rename?'.yellow)
+					config.download.autoRename = readline.keyInYNStrict('Do you want to turn on auto rename?'.yellow);
 					break;
 
 				case 4: //代理设置
