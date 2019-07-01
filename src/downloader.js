@@ -2,10 +2,9 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-23 08:44:16
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2019-06-19 01:22:42
+ * @Last Modified time: 2019-07-01 13:50:56
  */
 
-const NekoTools = require('crawl-neko').getTools();
 const Illust = require('./illust');
 const Illustrator = require('./illustrator');
 const Fs = require("fs");
@@ -208,7 +207,7 @@ function downloadIllusts(illusts, dldir, totalThread) {
 						pause = false;
 					}
 					//失败重试
-					return NekoTools.download(tempDir, illust.file, illust.url, options).then(async res => {
+					return Tools.download(tempDir, illust.file, illust.url, options).then(async res => {
 						//文件完整性校验
 						let fileSize = res.headers['content-length'];
 						let dlFile = Path.join(tempDir, illust.file);
@@ -257,7 +256,7 @@ function downloadIllusts(illusts, dldir, totalThread) {
 async function getIllustratorNewDir(data) {
 	//下载目录
 	let mainDir = config.path;
-	if (!Fs.existsSync(mainDir)) NekoTools.mkdirsSync(mainDir);
+	if (!Fs.existsSync(mainDir)) Tools.mkdirsSync(mainDir);
 	let dldir = null;
 
 	//先搜寻已有目录

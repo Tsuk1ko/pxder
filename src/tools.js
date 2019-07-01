@@ -1,12 +1,14 @@
 /*
- * @Author: Jindai Kirin 
- * @Date: 2018-08-14 15:53:22 
+ * @Author: Jindai Kirin
+ * @Date: 2018-08-14 15:53:22
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2019-03-18 15:55:54
+ * @Last Modified time: 2019-07-01 13:50:15
  */
 
-const Fs = require("fs");
+const Fs = require('fs');
 const Readline = require('readline');
+const Axios = require('axios');
+const Path = require('path');
 
 /**
  * 读取目录下的内容
@@ -37,9 +39,54 @@ function clearProgress(interval) {
 	Readline.cursorTo(process.stdout, 0);
 }
 
+/**
+ * Download file via axios, will make directories automatically
+ *
+ * @param {string} dirpath Directory path
+ * @param {string} filename Filename
+ * @param {string} url URL
+ * @param {*} axiosOption Option for axios
+ * @returns Axios promise
+ */
+async function download(dirpath, filename, url, axiosOption) {
+	if (!Fs.existsSync(dirpath)) mkdirsSync(dirpath);
+	let response;
+	axiosOption.responseType = 'stream';
+
+	await Axios.create(axiosOption).get(url).then(res => {
+		response = res;
+	});
+	return new Promise((reslove, reject) => {
+		response.data.pipe(Fs.createWriteStream(Path.join(dirpath, filename)));
+		response.data.on('end', () => {
+			reslove(response);
+		});
+		response.data.on('error', e => {
+			reject(e);
+		});
+	});
+}
+
+/**
+ * Recursively create directories
+ *
+ * @param {string} dirpath Directory path
+ */
+function mkdirsSync(dirpath) {
+	let parentDir = Path.dirname(dirpath);
+	//如果目标文件夹不存在但是上级文件夹存在
+	if (!Fs.existsSync(dirpath) && Fs.existsSync(parentDir)) {
+		Fs.mkdirSync(dirpath);
+	} else {
+		mkdirsSync(parentDir);
+		Fs.mkdirSync(dirpath);
+	}
+}
 
 module.exports = {
 	readDirSync,
 	showProgress,
-	clearProgress
+	clearProgress,
+	download,
+	mkdirsSync
 };
