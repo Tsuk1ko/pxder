@@ -55,15 +55,13 @@ handleArgv().then(async () => {
 		process.exit();
 	}
 
-	if (program.debug) global.p_debug = true;
-
 	//重登陆
 	let pixiv = new Pixiv();
 	await pixiv.relogin();
 
 	//开始下载
 	console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
-	if (typeof (config.proxy) == "string" && config.proxy.length > 0)
+	if (typeof(config.proxy) == "string" && config.proxy.length > 0)
 		console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
 
 	if (program.follow) await pixiv.downloadFollowAll(false, program.force);
@@ -75,7 +73,7 @@ handleArgv().then(async () => {
 	if (program.uid) {
 		//得到UID
 		let uids = program.uid;
-		if (typeof (uids) == 'string') {
+		if (typeof(uids) == 'string') {
 			uids = uids.split(',');
 			await pixiv.downloadByUIDs(uids);
 		} else help();
@@ -83,7 +81,7 @@ handleArgv().then(async () => {
 	if (program.pid) {
 		//得到PID
 		let pids = program.pid;
-		if (typeof (pids) == 'string') {
+		if (typeof(pids) == 'string') {
 			pids = pids.split(',');
 			await pixiv.downloadByPIDs(pids);
 		} else help();
@@ -99,7 +97,7 @@ handleArgv().then(async () => {
 	//检查更新
 	CheckUpdate.init();
 	let laterVersion = await CheckUpdate.check();
-	if(laterVersion){
+	if (laterVersion) {
 		console.log(`New version ${laterVersion.yellow} is available.`);
 		console.log(`You can upgrade via the '${'npm i -g pxder'.yellow}' command.\n`);
 	}
@@ -114,6 +112,8 @@ handleArgv().then(async () => {
 
 
 async function handleArgv() {
+	//debug
+	if (program.debug) global.p_debug = true;
 	//其他选项
 	let pass = false;
 	if (program.login) {
@@ -123,8 +123,13 @@ async function handleArgv() {
 		let p = readline.question('Password: '.yellow, {
 			hideEchoBack: true
 		});
-		await Pixiv.login(u, p);
-		console.log('\nLogin success!\n'.green);
+		try {
+			await Pixiv.login(u, p);
+			console.log('\nLogin success!\n'.green);
+		} catch (error) {
+			console.log('\nLogin fail!'.red, 'Please check your input or proxy setting.\n');
+			if (global.p_debug) console.error(error);
+		}
 	} else if (program.logout) {
 		//登出
 		Pixiv.logout();
@@ -140,7 +145,7 @@ async function handleArgv() {
 				'Download thread\t'.yellow + config.download.thread,
 				'Download timeout\t'.yellow + config.download.timeout,
 				'Auto rename\t\t'.yellow + (config.download.autoRename ? 'On' : 'Off'),
-				'Proxy\t\t'.yellow + (typeof (config.proxy) == "string" && config.proxy.length > 0 ? config.proxy : 'Disable')
+				'Proxy\t\t'.yellow + (typeof(config.proxy) == "string" && config.proxy.length > 0 ? config.proxy : 'Disable')
 			];
 			index = readline.keyInSelect(options, 'Press a key:', {
 				cancel: 'Exit'.bgMagenta
