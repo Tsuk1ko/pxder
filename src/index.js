@@ -238,12 +238,8 @@ class PixivFunc {
 		let follows = [];
 
 		let processDisplay = Tools.showProgress(() => follows.length);
-		let count = 0;
 
 		do {
-			// Offset must be no more than 5000
-			count += 30;
-			if (count >= 5000) break;
 			follows = follows.concat(await this.getMyFollow(isPrivate));
 		} while (this.followNextUrl);
 

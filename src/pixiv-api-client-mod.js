@@ -31,6 +31,7 @@ require('colors');
 let axios = require('axios');
 const qs = require('qs');
 const Readline = require('readline');
+const URL = require('url');
 
 const BASE_URL = 'https://app-api.pixiv.net';
 const CLIENT_ID = 'KzEZED7aC0vird8jWyHM38mXjNTY';
@@ -39,7 +40,14 @@ const filter = 'for_ios';
 
 function callApi(url, options) {
 	const finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
-	return axios(finalUrl, options).then(res => res.data).catch(err => {
+	return axios(finalUrl, options).then(res => {
+		let data = res.data;
+		if (data.next_url) {
+			let query = qs.parse(URL.parse(data.next_url).query);
+			if (query.offset && query.offset >= 5000) delete data.next_url;
+		}
+		return data;
+	}).catch(err => {
 		if (err.code == 'ECONNRESET') {
 			Readline.clearLine(process.stdout, 0);
 			Readline.cursorTo(process.stdout, 0);
