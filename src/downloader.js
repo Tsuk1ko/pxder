@@ -2,7 +2,7 @@
  * @Author: Jindai Kirin
  * @Date: 2018-08-23 08:44:16
  * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2019-07-01 13:50:56
+ * @Last Modified time: 2019-08-21 19:02:39
  */
 
 const Illust = require('./illust');
@@ -36,11 +36,11 @@ function setAgent(agent) {
  */
 async function downloadByIllustrators(illustrators, callback) {
 	for (let i in illustrators) {
-		let illustrator = illustrators[i];
+		const illustrator = illustrators[i];
 
-		let error = await illustrator.info().catch(e => e);
-		if (typeof error == 'string' && error.indexOf('404') >= 0) {
-			console.log('\nIllustrator ' + 'uid '.gray + illustrator.id.toString().cyan + ' may have left pixiv or does not exist');
+		const error = await illustrator.info().catch(e => e);
+		if (error && error.status && error.status == 404) {
+			console.log('\nIllustrator ' + 'uid '.gray + illustrator.id.toString().cyan + ' may have left pixiv or does not exist.');
 			continue;
 		}
 
