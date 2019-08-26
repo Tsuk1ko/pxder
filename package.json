@@ -9,12 +9,16 @@
     "colors": "^1.3.3",
     "commander": "^2.20.0",
     "compare-versions": "^3.5.0",
+    "etl": "^0.6.6",
     "fs-extra": "^8.1.0",
+    "get-pixels": "^3.3.2",
+    "gif-encoder": "^0.7.2",
     "https-proxy-agent": "^2.2.1",
     "latest-version": "^5.1.0",
     "pixiv-api-client": "^0.18.0",
     "readline-sync": "^1.4.9",
-    "socks-proxy-agent": "^4.0.2"
+    "socks-proxy-agent": "^4.0.2",
+    "unzipper": "^0.10.4"
   },
   "devDependencies": {
     "@types/readline-sync": "^1.4.3"
