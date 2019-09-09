@@ -30,12 +30,14 @@ require('colors');
 
 let axios = require('axios');
 const qs = require('qs');
+const md5 = require('blueimp-md5');
 const Readline = require('readline');
 const URL = require('url');
 
 const BASE_URL = 'https://app-api.pixiv.net';
 const CLIENT_ID = 'KzEZED7aC0vird8jWyHM38mXjNTY';
 const CLIENT_SECRET = 'W9JZoJe00qPvJsiyCGT3CCtC6ZUtdpKpzMbNlUGP';
+const HASH_SECRET = '28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c';
 const filter = 'for_ios';
 
 function callApi(url, options) {
@@ -78,6 +80,14 @@ class PixivApi {
 		});
 	}
 
+	getDefaultHeaders() {
+		const datetime = new Date().toISOString();
+		return Object.assign({}, this.headers, {
+			'X-Client-Time': datetime,
+			'X-Client-Hash': md5(`${datetime}${HASH_SECRET}`),
+		});
+	}
+
 	login(username, password, rememberPassword) {
 		if (!username) {
 			return Promise.reject(new Error('username required'));
@@ -89,13 +99,15 @@ class PixivApi {
 			client_id: CLIENT_ID,
 			client_secret: CLIENT_SECRET,
 			get_secure_url: 1,
+			include_policy: true,
 			grant_type: 'password',
 			username,
 			password,
 		});
-		let options = {
+		const options = {
 			method: 'POST',
 			headers: {
+				...this.getDefaultHeaders(),
 				'Content-Type': 'application/x-www-form-urlencoded',
 			},
 			data,
@@ -139,6 +151,7 @@ class PixivApi {
 		let options = {
 			method: 'POST',
 			headers: {
+				...this.getDefaultHeaders(),
 				'Content-Type': 'application/x-www-form-urlencoded',
 			},
 			data,
@@ -1014,7 +1027,7 @@ class PixivApi {
 			return Promise.reject('Url cannot be empty');
 		}
 		options = options || {};
-		options.headers = Object.assign({}, this.headers, options.headers || {});
+		options.headers = Object.assign(this.getDefaultHeaders(), options.headers || {});
 		if (this.auth && this.auth.access_token) {
 			options.headers.Authorization = `Bearer ${this.auth.access_token}`;
 		}
