@@ -40,14 +40,15 @@ async function check() {
 	} = Fse.readJSONSync(checkLogFile);
 	const now = new Date().getTime();
 	if (now > lastCheck + 3 * 24 * 60 * 60 * 1000) {
-		latestVersion = await getLatestVersion(name);
+		latestVersion = await getLatestVersion(name, {
+			agent: global.proxyAgent
+		});
 		Fse.writeJSONSync(checkLogFile, {
 			lastCheck: now,
 			latestVersion
 		});
 	}
 	if (compareVersions(latestVersion, version) > 0) return latestVersion;
-	return null;
 }
 
 module.exports = {

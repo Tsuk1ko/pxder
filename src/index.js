@@ -54,7 +54,7 @@ class PixivFunc {
 	 */
 	static readConfig() {
 		PixivFunc.initConfig();
-		let config = require(configFile);
+		const config = require(configFile);
 		//check
 		if (!config.download.thread) config.download.thread = 5;
 		if (!config.download.autoRename) config.download.autoRename = false;
@@ -106,7 +106,7 @@ class PixivFunc {
 		__config = config;
 		config.download.tmp = Path.join(configFileDir, "tmp");
 		Downloader.setConfig(config.download);
-		let proxy = config.proxy;
+		const proxy = config.proxy;
 		let agent = false;
 		if (typeof(proxy) == "string") {
 			if (proxy.search('http://') === 0) agent = new HttpsProxyAgent(proxy);
@@ -115,6 +115,7 @@ class PixivFunc {
 		if (agent) {
 			Downloader.setAgent(agent);
 			PixivApi.setAgent(agent);
+			global.proxyAgent = agent;
 		}
 	}
 
@@ -128,12 +129,12 @@ class PixivFunc {
 	 */
 	static async login(u, p) {
 		//登录
-		let pixiv = new PixivApi();
+		const pixiv = new PixivApi();
 		await pixiv.login(u, p);
 		//获取refresh_token
-		let refresh_token = pixiv.authInfo().refresh_token;
+		const refresh_token = pixiv.authInfo().refresh_token;
 		//更新配置
-		let conf = PixivFunc.readConfig();
+		const conf = PixivFunc.readConfig();
 		conf.refresh_token = refresh_token;
 		PixivFunc.writeConfig(conf);
 	}
@@ -147,7 +148,7 @@ class PixivFunc {
 	 */
 	async relogin() {
 		//检查配置
-		let refresh_token = PixivFunc.readConfig().refresh_token;
+		const refresh_token = PixivFunc.readConfig().refresh_token;
 		if (!refresh_token) return false;
 		//刷新token
 		this.pixiv = new PixivApi();
@@ -155,7 +156,7 @@ class PixivFunc {
 		Illustrator.setPixiv(this.pixiv);
 		require('./illust').setPixiv(this.pixiv);
 		//定时刷新token
-		let p = this.pixiv;
+		const p = this.pixiv;
 		this.reloginInterval = setInterval(() => {
 			p.refreshAccessToken(refresh_token);
 		}, 40 * 60 * 1000);
@@ -178,7 +179,7 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	static logout() {
-		let config = PixivFunc.readConfig();
+		const config = PixivFunc.readConfig();
 		config.refresh_token = null;
 		PixivFunc.writeConfig(config);
 	}
@@ -191,15 +192,15 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	async getMyFollow(isPrivate = false) {
-		let follows = [];
+		const follows = [];
 		let next = this.followNextUrl;
 
 		//加入画师信息
 		async function addToFollows(data) {
 			next = data.next_url;
-			for (let preview of data.user_previews) {
+			for (const preview of data.user_previews) {
 				if (preview.user.id != 11) { //除去“pixiv事務局”
-					let tmp = new Illustrator(preview.user.id, preview.user.name);
+					const tmp = new Illustrator(preview.user.id, preview.user.name);
 					await tmp.setExampleIllusts(preview.illusts);
 					follows.push(tmp);
 				}
@@ -235,12 +236,12 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	async getAllMyFollow(isPrivate = false) {
-		let follows = [];
+		const follows = [];
 
-		let processDisplay = Tools.showProgress(() => follows.length);
+		const processDisplay = Tools.showProgress(() => follows.length);
 
 		do {
-			follows = follows.concat(await this.getMyFollow(isPrivate));
+			follows.push(...(await this.getMyFollow(isPrivate)));
 		} while (this.followNextUrl);
 
 		Tools.clearProgress(processDisplay);
@@ -255,8 +256,8 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	async downloadByUIDs(uids) {
-		let uidArray = (Array.isArray(uids) ? uids : [uids]);
-		for (let uid of uidArray) {
+		const uidArray = (Array.isArray(uids) ? uids : [uids]);
+		for (const uid of uidArray) {
 			await Downloader.downloadByIllustrators([new Illustrator(uid)]).catch(e => {
 				console.error(e);
 			});
@@ -270,7 +271,7 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	async downloadBookmark(isPrivate = false) {
-		let me = new Illustrator(this.pixiv.authInfo().user.id);
+		const me = new Illustrator(this.pixiv.authInfo().user.id);
 		await Downloader.downloadByBookmark(me, isPrivate);
 	}
 
@@ -286,7 +287,7 @@ class PixivFunc {
 		let illustrators = null;
 
 		//临时文件
-		let tmpJson = Path.join(configFileDir, (isPrivate ? 'private' : 'public') + '.json');
+		const tmpJson = Path.join(configFileDir, (isPrivate ? 'private' : 'public') + '.json');
 		if (!Fs.existsSync(__config.download.path)) Fs.mkdirSync(__config.download.path);
 
 		//取得关注列表
@@ -308,8 +309,8 @@ class PixivFunc {
 		//数据恢复
 		if (!illustrators) {
 			illustrators = [];
-			for (let follow of follows) {
-				let tempI = new Illustrator(follow.id, follow.name);
+			for (const follow of follows) {
+				const tempI = new Illustrator(follow.id, follow.name);
 				tempI.exampleIllusts = follow.illusts;
 				illustrators.push(tempI);
 			}
@@ -331,16 +332,16 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	async downloadUpdate() {
-		let uids = [];
+		const uids = [];
 		//得到文件夹内所有UID
 		await Tools.readDirSync(__config.download.path).then(files => {
-			for (let file of files) {
-				let search = /^\(([0-9]+)\)/.exec(file);
+			for (const file of files) {
+				const search = /^\(([0-9]+)\)/.exec(file);
 				if (search) uids.push(search[1]);
 			}
 		});
 		//下载
-		let illustrators = [];
+		const illustrators = [];
 		uids.forEach(uid => illustrators.push(new Illustrator(uid)));
 		await Downloader.downloadByIllustrators(illustrators);
 	}
@@ -362,8 +363,8 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	async downloadByPIDs(pids) {
-		let jsons = [];
-		for (let pid of pids) {
+		const jsons = [];
+		for (const pid of pids) {
 			jsons.push(await this.pixiv.illustDetail(pid).then(json => json.illust));
 		}
 		await Downloader.downloadByIllusts(jsons);

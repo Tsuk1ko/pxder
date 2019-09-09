@@ -7,8 +7,8 @@ const Pixiv = require('../src/index');
 const CheckUpdate = require('../src/checkUpdate');
 const pkg = require('../package.json');
 
-let program = require('commander');
-let readline = require('readline-sync');
+const program = require('commander');
+const readline = require('readline-sync');
 
 /*
  * Usage
@@ -41,7 +41,7 @@ program.usage('<options> [value]')
 /*
  * Start
  */
-let config = Pixiv.readConfig();
+const config = Pixiv.readConfig();
 
 handleArgv().then(async () => {
 	if (program.confLoca) {
@@ -55,8 +55,12 @@ handleArgv().then(async () => {
 		process.exit();
 	}
 
+	//检查更新
+	CheckUpdate.init();
+	const laterVersion = CheckUpdate.check();
+
 	//重登陆
-	let pixiv = new Pixiv();
+	const pixiv = new Pixiv();
 	await pixiv.relogin();
 
 	//开始下载
@@ -94,13 +98,12 @@ handleArgv().then(async () => {
 	pixiv.clearReloginInterval();
 	console.log();
 
-	//检查更新
-	CheckUpdate.init();
-	let laterVersion = await CheckUpdate.check();
-	if (laterVersion) {
-		console.log(`New version ${laterVersion.yellow} is available.`);
-		console.log(`You can upgrade via the '${'npm i -g pxder'.yellow}' command.\n`);
-	}
+	laterVersion.then(version => {
+		if (version) {
+			console.log(`New version ${version.yellow} is available.`);
+			console.log(`You can upgrade via the '${'npm i -g pxder'.yellow}' command.\n`);
+		}
+	});
 }).catch(e => {
 	if (global.p_debug) console.error(e);
 	else {
@@ -119,8 +122,8 @@ async function handleArgv() {
 	if (program.login) {
 		//登录
 		console.log('\nPixiv Login\n'.cyan);
-		let u = readline.question('Username: '.yellow);
-		let p = readline.question('Password: '.yellow, {
+		const u = readline.question('Username: '.yellow);
+		const p = readline.question('Password: '.yellow, {
 			hideEchoBack: true
 		});
 		try {
@@ -140,7 +143,7 @@ async function handleArgv() {
 		do {
 			console.clear();
 			console.log('Pxder Options'.green);
-			let options = [
+			const options = [
 				'Download path\t'.yellow + (config.download.path ? config.download.path : 'Null, please set one'.bgRed),
 				'Download thread\t'.yellow + config.download.thread,
 				'Download timeout\t'.yellow + config.download.timeout,
