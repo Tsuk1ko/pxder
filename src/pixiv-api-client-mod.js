@@ -1,4 +1,6 @@
 /*
+https://github.com/alphasp/pixiv-api-client
+
 MIT License
 
 Copyright (c) 2016 alphasp <gmerudotcom@gmail.com>
@@ -88,6 +90,17 @@ class PixivApi {
 		});
 	}
 
+	getDefaultOptions(data, additionHeaders = {}) {
+		return {
+			method: 'POST',
+			headers: {
+				...additionHeaders,
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+			data,
+		};
+	}
+
 	login(username, password, rememberPassword) {
 		if (!username) {
 			return Promise.reject(new Error('username required'));
@@ -104,14 +117,7 @@ class PixivApi {
 			username,
 			password,
 		});
-		const options = {
-			method: 'POST',
-			headers: {
-				...this.getDefaultHeaders(),
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data, this.getDefaultHeaders());
 		return axios('https://oauth.secure.pixiv.net/auth/token', options)
 			.then(res => {
 				this.auth = res.data.response;
@@ -148,14 +154,7 @@ class PixivApi {
 			grant_type: 'refresh_token',
 			refresh_token: refreshToken || this.auth.refresh_token,
 		});
-		let options = {
-			method: 'POST',
-			headers: {
-				...this.getDefaultHeaders(),
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data, this.getDefaultHeaders());
 		return axios('https://oauth.secure.pixiv.net/auth/token', options)
 			.then(res => {
 				this.auth = res.data.response;
@@ -173,14 +172,9 @@ class PixivApi {
 			user_name: nickname,
 		});
 
-		let options = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-				Authorization: 'Bearer WHDWCGnwWA2C8PRfQSdXJxjXp0G6ULRaRkkd6t5B6h8',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data, {
+			Authorization: 'Bearer WHDWCGnwWA2C8PRfQSdXJxjXp0G6ULRaRkkd6t5B6h8',
+		});
 		return axios(
 				'https://accounts.pixiv.net/api/provisional-accounts/create',
 				options
@@ -206,13 +200,7 @@ class PixivApi {
 		}, {
 			skipNulls: true
 		});
-		const options = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data);
 
 		return this.requestUrl(
 			'https://accounts.pixiv.net/api/account/edit',
@@ -613,13 +601,7 @@ class PixivApi {
 			comment,
 			parent_comment_id: parentCommentId,
 		});
-		const options = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data);
 		return this.requestUrl(`/v1/illust/comment/add`, options);
 	}
 
@@ -635,13 +617,7 @@ class PixivApi {
 			comment,
 			parent_comment_id: parentCommentId,
 		});
-		const options = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data);
 		return this.requestUrl(`/v1/novel/comment/add`, options);
 	}
 
@@ -682,13 +658,7 @@ class PixivApi {
 			restrict: restrict || 'public',
 			tags: tags && tags.length ? tags : undefined,
 		});
-		const options = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data);
 		return this.requestUrl('/v2/illust/bookmark/add', options);
 	}
 
@@ -699,13 +669,7 @@ class PixivApi {
 		const data = qs.stringify({
 			illust_id: id,
 		});
-		const options = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data);
 		return this.requestUrl('/v1/illust/bookmark/delete', options);
 	}
 
@@ -724,13 +688,7 @@ class PixivApi {
 			restrict: restrict || 'public',
 			tags: tags && tags.length ? tags : undefined,
 		});
-		const options = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data);
 		return this.requestUrl('/v2/novel/bookmark/add', options);
 	}
 
@@ -741,13 +699,7 @@ class PixivApi {
 		const data = qs.stringify({
 			novel_id: id,
 		});
-		const options = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data);
 		return this.requestUrl('/v1/novel/bookmark/delete', options);
 	}
 
@@ -762,13 +714,7 @@ class PixivApi {
 			user_id: id,
 			restrict: restrict || 'public',
 		});
-		const options = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data);
 		return this.requestUrl('/v1/user/follow/add', options);
 	}
 
@@ -780,14 +726,7 @@ class PixivApi {
 			user_id: id,
 			restrict: 'public',
 		});
-		//
-		const options = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			data,
-		};
+		const options = this.getDefaultOptions(data);
 		return this.requestUrl('/v1/user/follow/delete', options);
 	}
 
