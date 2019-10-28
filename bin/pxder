@@ -98,7 +98,12 @@ handleArgv().then(async () => {
 	pixiv.clearReloginInterval();
 	console.log();
 
+	const checkTimeout = setTimeout(() => {
+		process.exit();
+	}, 3000);
+
 	laterVersion.then(version => {
+		clearTimeout(checkTimeout);
 		if (version) {
 			console.log(`New version ${version.yellow} is available.`);
 			console.log(`You can upgrade via the '${'npm i -g pxder'.yellow}' command.\n`);
