@@ -24,10 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/* eslint strict:0 */
-
-'use strict';
-
 require('colors'); // mod
 
 let axios = require('axios'); // mod
