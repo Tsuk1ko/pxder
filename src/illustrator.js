@@ -66,27 +66,22 @@ class Illustrator {
 		let result = [];
 		let json = {};
 
-		try {
-			//请求
-			if (this.next[type]) json = await pixiv.requestUrl(this.next[type]);
-			else {
-				if (type == 'illust') json = await pixiv.userIllusts(this.id);
-				else if (type == 'bookmark') {
-					if (option) json = await pixiv.userBookmarksIllust(this.id, option);
-					else json = await pixiv.userBookmarksIllust(this.id);
-				}
+		//请求
+		if (this.next[type]) json = await pixiv.requestUrl(this.next[type]);
+		else {
+			if (type == 'illust') json = await pixiv.userIllusts(this.id);
+			else if (type == 'bookmark') {
+				if (option) json = await pixiv.userBookmarksIllust(this.id, option);
+				else json = await pixiv.userBookmarksIllust(this.id);
 			}
-
-			//数据整合
-			for (let illust of json.illusts) {
-				result = result.concat(await Illust.getIllusts(illust));
-			}
-
-			this.next[type] = json.next_url;
-		} catch (error) {
-			this.next[type] = null;
-			console.log('\n', error, '\n');
 		}
+
+		//数据整合
+		for (let illust of json.illusts) {
+			result = result.concat(await Illust.getIllusts(illust));
+		}
+
+		this.next[type] = json.next_url;
 
 		return result;
 	}

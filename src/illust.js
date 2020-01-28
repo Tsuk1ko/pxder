@@ -1,10 +1,3 @@
-/*
- * @Author: Jindai Kirin 
- * @Date: 2018-08-23 14:49:30 
- * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2019-03-18 15:40:44
- */
-
 let pixiv;
 
 /**
@@ -37,7 +30,7 @@ class Illust {
 			id: this.id,
 			title: this.title,
 			url: this.url,
-			file: this.file
+			file: this.file,
 		};
 	}
 
@@ -54,10 +47,15 @@ class Illust {
 		let fileName = title.replace(/[\/\\:*?"<>|.&\$]/g, ''); //适合的文件名
 		let id = illustJSON.id;
 		//动图的话是一个压缩包
-		if (illustJSON.type == "ugoira") {
-			let uDelay;
-			uDelay = await pixiv.ugoiraMetaData(id).then(ret => ret.ugoira_metadata.frames[0].delay);
-			illusts.push(new Illust(id, title, illustJSON.meta_single_page.original_image_url.replace('img-original', 'img-zip-ugoira').replace(/_ugoira0\.(.*)/, '_ugoira1920x1080.zip'), `(${id})${fileName}@${uDelay}ms.zip`));
+		if (illustJSON.type == 'ugoira') {
+			const ugoiraParams = [id, title, illustJSON.meta_single_page.original_image_url.replace('img-original', 'img-zip-ugoira').replace(/_ugoira0\.(.*)/, '_ugoira1920x1080.zip')];
+			try {
+				const uDelay = await pixiv.ugoiraMetaData(id).then(ret => ret.ugoira_metadata.frames[0].delay);
+				illusts.push(new Illust(...ugoiraParams, `(${id})${fileName}@${uDelay}ms.zip`));
+			} catch (error) {
+				console.log('\nGet ugoira meta data failed:', error, '\n');
+				illusts.push(new Illust(...ugoiraParams, `(${id})${fileName}.zip`));
+			}
 		} else {
 			if (illustJSON.meta_pages.length > 0) {
 				//组图
