@@ -36,13 +36,14 @@ class PixivFunc {
 	 */
 	static initConfig(forceInit = false) {
 		if (!Fs.existsSync(configFileDir)) Fs.mkdirSync(configFileDir);
-		if (!Fs.existsSync(configFile) || forceInit) Fse.writeJSONSync(configFile, {
-			download: {
-				thread: 5,
-				timeout: 30,
-				autoRename: false
-			}
-		});
+		if (!Fs.existsSync(configFile) || forceInit)
+			Fse.writeJSONSync(configFile, {
+				download: {
+					thread: 5,
+					timeout: 30,
+					autoRename: false,
+				},
+			});
 	}
 
 	/**
@@ -104,11 +105,11 @@ class PixivFunc {
 	 */
 	static applyConfig(config) {
 		__config = config;
-		config.download.tmp = Path.join(configFileDir, "tmp");
+		config.download.tmp = Path.join(configFileDir, 'tmp');
 		Downloader.setConfig(config.download);
 		const proxy = config.proxy;
 		let agent = false;
-		if (typeof(proxy) == "string") {
+		if (typeof proxy == 'string') {
 			if (proxy.search('http://') === 0) agent = new HttpsProxyAgent(proxy);
 			else if (proxy.search('socks://') === 0) agent = new SocksProxyAgent(proxy, true);
 		}
@@ -199,7 +200,8 @@ class PixivFunc {
 		async function addToFollows(data) {
 			next = data.next_url;
 			for (const preview of data.user_previews) {
-				if (preview.user.id != 11) { //除去“pixiv事務局”
+				if (preview.user.id != 11) {
+					//除去“pixiv事務局”
 					const tmp = new Illustrator(preview.user.id, preview.user.name);
 					await tmp.setExampleIllusts(preview.illusts);
 					follows.push(tmp);
@@ -210,9 +212,12 @@ class PixivFunc {
 		//开始收集
 		if (next) {
 			await this.pixiv.requestUrl(next).then(addToFollows);
-		} else await this.pixiv.userFollowing(this.pixiv.authInfo().user.id, {
-			restrict: isPrivate ? 'private' : 'public'
-		}).then(addToFollows);
+		} else
+			await this.pixiv
+				.userFollowing(this.pixiv.authInfo().user.id, {
+					restrict: isPrivate ? 'private' : 'public',
+				})
+				.then(addToFollows);
 
 		this.followNextUrl = next;
 		return follows;
@@ -256,7 +261,7 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	async downloadByUIDs(uids) {
-		const uidArray = (Array.isArray(uids) ? uids : [uids]);
+		const uidArray = Array.isArray(uids) ? uids : [uids];
 		for (const uid of uidArray) {
 			await Downloader.downloadByIllustrators([new Illustrator(uid)]).catch(e => {
 				console.error(e);
@@ -296,11 +301,13 @@ class PixivFunc {
 
 			await this.getAllMyFollow(isPrivate).then(ret => {
 				illustrators = ret;
-				ret.forEach(illustrator => follows.push({
-					id: illustrator.id,
-					name: illustrator.name,
-					illusts: illustrator.exampleIllusts
-				}));
+				ret.forEach(illustrator =>
+					follows.push({
+						id: illustrator.id,
+						name: illustrator.name,
+						illusts: illustrator.exampleIllusts,
+					})
+				);
 			});
 
 			Fs.writeFileSync(tmpJson, JSON.stringify(follows));
@@ -365,11 +372,14 @@ class PixivFunc {
 	async downloadByPIDs(pids) {
 		const jsons = [];
 		for (const pid of pids) {
-			jsons.push(await this.pixiv.illustDetail(pid).then(json => json.illust));
+			try {
+				jsons.push(await this.pixiv.illustDetail(pid).then(json => json.illust));
+			} catch (error) {
+				console.log(`${pid} does not exist`.gray);
+			}
 		}
 		await Downloader.downloadByIllusts(jsons);
 	}
 }
-
 
 module.exports = PixivFunc;
