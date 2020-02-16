@@ -371,7 +371,15 @@ class PixivFunc {
 	 */
 	async downloadByPIDs(pids) {
 		const jsons = [];
+		const exists = Fse.readdirSync(Path.join(__config.download.path, 'PID'))
+			.map(file => {
+				const search = /^\(([0-9]+)\)/.exec(file);
+				if (search && search[1]) return search[1];
+				return null;
+			})
+			.filter(pid => pid);
 		for (const pid of pids) {
+			if (exists.includes(pid)) continue;
 			try {
 				jsons.push(await this.pixiv.illustDetail(pid).then(json => json.illust));
 			} catch (error) {
