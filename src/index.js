@@ -112,6 +112,22 @@ class PixivFunc {
 		if (typeof proxy == 'string') {
 			if (proxy.search('http://') === 0) agent = new HttpsProxyAgent(proxy);
 			else if (proxy.search('socks://') === 0) agent = new SocksProxyAgent(proxy, true);
+			/* fix OAuth may fail if env has set the http proxy */
+			if (process.env.http_proxy || process.env.https_proxy) {
+				delete process.env.http_proxy;
+				delete process.env.https_proxy;
+			}
+		}
+		if (!agent && (process.env.all_proxy || process.env.https_proxy || process.env.http_proxy)) {
+			/* if config has no proxy and env has, use it */
+			const proxy = (process.env.all_proxy || process.env.https_proxy || process.env.http_proxy)
+				.replace("socks5", "socks").replace("https", "http");
+			if (proxy.search('http://') === 0) agent = new HttpsProxyAgent(proxy);
+			else if (proxy.search('socks://') === 0) agent = new SocksProxyAgent(proxy, true);
+			if (process.env.http_proxy || process.env.https_proxy) {
+				delete process.env.http_proxy;
+				delete process.env.https_proxy;
+			}
 		}
 		if (agent) {
 			Downloader.setAgent(agent);
@@ -214,10 +230,10 @@ class PixivFunc {
 			await this.pixiv.requestUrl(next).then(addToFollows);
 		} else
 			await this.pixiv
-				.userFollowing(this.pixiv.authInfo().user.id, {
-					restrict: isPrivate ? 'private' : 'public',
-				})
-				.then(addToFollows);
+			.userFollowing(this.pixiv.authInfo().user.id, {
+				restrict: isPrivate ? 'private' : 'public',
+			})
+			.then(addToFollows);
 
 		this.followNextUrl = next;
 		return follows;
