@@ -13,9 +13,7 @@ const Fs = require('fs');
 const Fse = require('fs-extra');
 const Path = require('path');
 const Tools = require('./tools');
-
-const SocksProxyAgent = require('socks-proxy-agent');
-const HttpsProxyAgent = require('https-proxy-agent');
+const { getProxyAgent, getSysProxy } = require('./proxy');
 
 const configFileDir = require('appdata-path').getAppDataPath('pxder');
 const configFile = Path.join(configFileDir, 'config.json');
@@ -60,7 +58,6 @@ class PixivFunc {
 		if (!config.download.thread) config.download.thread = 5;
 		if (!config.download.autoRename) config.download.autoRename = false;
 		if (!config.download.timeout) config.download.timeout = 30;
-		PixivFunc.applyConfig(config);
 		return config;
 	}
 
@@ -103,31 +100,19 @@ class PixivFunc {
 	 * @param {*} config 配置
 	 * @memberof PixivFunc
 	 */
-	static applyConfig(config) {
+	static applyConfig(config = PixivFunc.readConfig()) {
 		__config = config;
 		config.download.tmp = Path.join(configFileDir, 'tmp');
 		Downloader.setConfig(config.download);
 		const proxy = config.proxy;
-		let agent = false;
-		if (typeof proxy == 'string') {
-			if (proxy.search('http://') === 0) agent = new HttpsProxyAgent(proxy);
-			else if (proxy.search('socks://') === 0) agent = new SocksProxyAgent(proxy, true);
-			/* fix OAuth may fail if env has set the http proxy */
-			if (process.env.http_proxy || process.env.https_proxy) {
-				delete process.env.http_proxy;
-				delete process.env.https_proxy;
-			}
-		}
-		if (!agent && (process.env.all_proxy || process.env.https_proxy || process.env.http_proxy)) {
-			/* if config has no proxy and env has, use it */
-			const proxy = (process.env.all_proxy || process.env.https_proxy || process.env.http_proxy)
-				.replace("socks5", "socks").replace("https", "http");
-			if (proxy.search('http://') === 0) agent = new HttpsProxyAgent(proxy);
-			else if (proxy.search('socks://') === 0) agent = new SocksProxyAgent(proxy, true);
-			if (process.env.http_proxy || process.env.https_proxy) {
-				delete process.env.http_proxy;
-				delete process.env.https_proxy;
-			}
+		const sysProxy = getSysProxy();
+		// if config has no proxy and env has, use it
+		const agent = proxy === 'disable' ? null : getProxyAgent(proxy) || getProxyAgent(sysProxy);
+		// fix OAuth may fail if env has set the http proxy
+		if (sysProxy) {
+			delete process.env.all_proxy;
+			delete process.env.http_proxy;
+			delete process.env.https_proxy;
 		}
 		if (agent) {
 			Downloader.setAgent(agent);
@@ -230,10 +215,10 @@ class PixivFunc {
 			await this.pixiv.requestUrl(next).then(addToFollows);
 		} else
 			await this.pixiv
-			.userFollowing(this.pixiv.authInfo().user.id, {
-				restrict: isPrivate ? 'private' : 'public',
-			})
-			.then(addToFollows);
+				.userFollowing(this.pixiv.authInfo().user.id, {
+					restrict: isPrivate ? 'private' : 'public',
+				})
+				.then(addToFollows);
 
 		this.followNextUrl = next;
 		return follows;
