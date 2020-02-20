@@ -10,21 +10,21 @@
 
 ### Windows
 
-打开[官网](https://nodejs.org) => 下载右边的“最新发布版” => 安装一路确定
+打开[官网](https://nodejs.org) => 下载左边的 LTS 版本 => 安装一路确定
 
 ### Linux
 
 ```bash
 # Ubuntu
-curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 # Debian
-curl -sL https://deb.nodesource.com/setup_10.x | bash -
+curl -sL https://deb.nodesource.com/setup_12.x | bash -
 apt-get install -y nodejs
 
 # Centos
-curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+curl -sL https://rpm.nodesource.com/setup_12.x | bash -
 yum install nodejs -y
 ```
 
@@ -96,7 +96,8 @@ pxder --setting
   - `http://user:passwd@127.0.0.1:1080`
   - `socks://127.0.0.1:1080`（如果你使用小飞机则直接填这个，除非你改过本地端口）
   
-  如果输入空行则关闭代理
+  如果输入空行则会尝试从环境变量中依次读取`all_proxy`,`https_proxy`,`https_proxy`  
+  如果想完全禁止使用代理，请输入`disable`
 
 注：配置文件存放路径可通过命令`pxder --conf-loca`查看
 
