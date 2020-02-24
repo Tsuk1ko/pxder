@@ -130,6 +130,7 @@ async function handleArgv() {
 		const u = readline.question('Username: '.yellow);
 		const p = readline.question('Password: '.yellow, { hideEchoBack: true });
 		try {
+			Pixiv.applyProxyConfig(config);
 			await Pixiv.login(u, p);
 			console.log('\nLogin success!\n'.green);
 		} catch (error) {

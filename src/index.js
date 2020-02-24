@@ -104,6 +104,17 @@ class PixivFunc {
 		__config = config;
 		config.download.tmp = Path.join(configFileDir, 'tmp');
 		Downloader.setConfig(config.download);
+		PixivFunc.applyProxyConfig(config);
+	}
+
+	/**
+	 * 应用代理配置
+	 *
+	 * @static
+	 * @param {*} config 配置
+	 * @memberof PixivFunc
+	 */
+	static applyProxyConfig(config = PixivFunc.readConfig()) {
 		const proxy = config.proxy;
 		const sysProxy = getSysProxy();
 		// if config has no proxy and env has, use it
