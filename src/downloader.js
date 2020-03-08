@@ -7,9 +7,8 @@
 
 const Illust = require('./illust');
 const Illustrator = require('./illustrator');
-const Fs = require("fs");
 const Fse = require('fs-extra');
-const Path = require("path");
+const Path = require('path');
 const Tools = require('./tools');
 require('colors');
 
@@ -18,7 +17,6 @@ const pixivRefer = 'https://www.pixiv.net/';
 let config;
 let httpsAgent = false;
 
-
 function setConfig(conf) {
 	config = conf;
 }
@@ -26,7 +24,6 @@ function setConfig(conf) {
 function setAgent(agent) {
 	httpsAgent = agent;
 }
-
 
 /**
  * 下载画师们的画作
@@ -44,7 +41,7 @@ async function downloadByIllustrators(illustrators, callback) {
 			continue;
 		}
 
-		console.log("\nCollecting illusts of " + (parseInt(i) + 1).toString().green + "/" + illustrators.length + " uid ".gray + illustrator.id.toString().cyan + " " + illustrator.name.yellow);
+		console.log('\nCollecting illusts of ' + (parseInt(i) + 1).toString().green + '/' + illustrators.length + ' uid '.gray + illustrator.id.toString().cyan + ' ' + illustrator.name.yellow);
 
 		//取得下载信息
 		let info = await getDownloadListByIllustrator(illustrator);
@@ -53,10 +50,9 @@ async function downloadByIllustrators(illustrators, callback) {
 		await downloadIllusts(info.illusts, Path.join(config.path, info.dir), config.thread);
 
 		//回调
-		if (typeof(callback) == 'function') callback(i);
+		if (typeof callback == 'function') callback(i);
 	}
 }
-
 
 /**
  * 获得该画师需要下载的画作列表
@@ -75,13 +71,13 @@ async function getDownloadListByIllustrator(illustrator) {
 	if (exampleIllusts) {
 		let existNum = 0;
 		for (let ei of exampleIllusts) {
-			if (Fs.existsSync(Path.join(config.path, dir, ei.file))) existNum++;
+			if (Fse.existsSync(Path.join(config.path, dir, ei.file))) existNum++;
 			else illusts.push(ei);
 		}
 		if (existNum > 0) {
 			return {
 				dir,
-				illusts: illusts.reverse()
+				illusts: illusts.reverse(),
 			};
 		}
 	}
@@ -96,7 +92,7 @@ async function getDownloadListByIllustrator(illustrator) {
 		cnt = 0;
 		let temps = await illustrator.illusts();
 		for (let temp of temps) {
-			if (!Fs.existsSync(Path.join(config.path, dir, temp.file))) {
+			if (!Fse.existsSync(Path.join(config.path, dir, temp.file))) {
 				illusts.push(temp);
 				cnt++;
 			}
@@ -107,10 +103,9 @@ async function getDownloadListByIllustrator(illustrator) {
 
 	return {
 		dir,
-		illusts: illusts.reverse()
+		illusts: illusts.reverse(),
 	};
 }
-
 
 /**
  * 下载自己的收藏
@@ -123,7 +118,7 @@ async function downloadByBookmark(me, isPrivate = false) {
 	//得到画师下载目录
 	let dir = '[bookmark] ' + (isPrivate ? 'Private' : 'Public');
 
-	console.log("\nCollecting illusts of your bookmark");
+	console.log('\nCollecting illusts of your bookmark');
 
 	//得到未下载的画作
 	let illusts = [];
@@ -135,7 +130,7 @@ async function downloadByBookmark(me, isPrivate = false) {
 		cnt = 0;
 		let temps = await me.bookmarks(isPrivate);
 		for (let temp of temps) {
-			if (!Fs.existsSync(Path.join(config.path, dir, temp.file))) {
+			if (!Fse.existsSync(Path.join(config.path, dir, temp.file))) {
 				illusts.push(temp);
 				cnt++;
 			}
@@ -147,7 +142,6 @@ async function downloadByBookmark(me, isPrivate = false) {
 	//下载
 	await downloadIllusts(illusts.reverse(), Path.join(config.path, dir), config.thread);
 }
-
 
 /**
  * 多线程下载插画队列
@@ -162,7 +156,7 @@ function downloadIllusts(illusts, dldir, totalThread) {
 	let totalI = 0;
 
 	//清除残留的临时文件
-	if (Fs.existsSync(tempDir)) Fse.removeSync(tempDir);
+	if (Fse.existsSync(tempDir)) Fse.removeSync(tempDir);
 
 	//开始多线程下载
 	let errorThread = 0;
@@ -182,21 +176,21 @@ function downloadIllusts(illusts, dldir, totalThread) {
 
 				let options = {
 					headers: {
-						referer: pixivRefer
+						referer: pixivRefer,
 					},
-					timeout: 1000 * config.timeout
+					timeout: 1000 * config.timeout,
 				};
 				//代理
 				if (httpsAgent) options.httpsAgent = httpsAgent;
 
 				//开始下载
-				console.log(`  [${threadID}]\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${"pid".gray} ${illust.id.toString().cyan}\t${illust.title.yellow}`);
+				console.log(`  [${threadID}]\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${'pid'.gray} ${illust.id.toString().cyan}\t${illust.title.yellow}`);
 				await (async function tryDownload(times) {
 					if (times > 10) {
 						if (errorThread > 1) {
 							if (errorTimeout) clearTimeout(errorTimeout);
 							errorTimeout = setTimeout(() => {
-								console.log("\n" + "Network error! Pause 5 minutes.".red + "\n");
+								console.log('\n' + 'Network error! Pause 5 minutes.'.red + '\n');
 							}, 1000);
 							pause = true;
 						} else return;
@@ -207,29 +201,35 @@ function downloadIllusts(illusts, dldir, totalThread) {
 						pause = false;
 					}
 					//失败重试
-					return Tools.download(tempDir, illust.file, illust.url, options).then(async res => {
-						//文件完整性校验
-						let fileSize = res.headers['content-length'];
-						let dlFile = Path.join(tempDir, illust.file);
-						//针对Linux文件系统不明bug
-						await sleep(1000);
-						for (let i = 0; i < 15 && !Fs.existsSync(dlFile); i++) await sleep(200);
-						let dlFileSize = Fs.statSync(dlFile).size;
-						if (dlFileSize == fileSize) Fse.moveSync(dlFile, Path.join(dldir, illust.file));
-						else {
-							Fs.unlinkSync(dlFile);
-							throw new Error('Incomplete download');
-						}
-						if (times != 1) errorThread--;
-					}).catch((e) => {
-						if (e && e.response && e.response.status == 404) {
-							console.log('  ' + '404'.bgRed + `\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${"pid".gray} ${illust.id.toString().cyan}\t${illust.title.yellow}`);
-							return;
-						} else if (times == 1) errorThread++;
-						if (global.p_debug) console.log(e);
-						console.log(`  ${times >= 10 ? `[${threadID}]`.bgRed : `[${threadID}]`.bgYellow}\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${"pid".gray} ${illust.id.toString().cyan}\t${illust.title.yellow}`);
-						return tryDownload(times + 1);
-					});
+					return Tools.download(tempDir, illust.file, illust.url, options)
+						.then(async res => {
+							//文件完整性校验
+							let fileSize = res.headers['content-length'];
+							let dlFile = Path.join(tempDir, illust.file);
+							//针对Linux文件系统不明bug
+							await sleep(1000);
+							for (let i = 0; i < 15 && !Fse.existsSync(dlFile); i++) await sleep(200);
+							let dlFileSize = Fse.statSync(dlFile).size;
+							if (dlFileSize == fileSize) Fse.moveSync(dlFile, Path.join(dldir, illust.file));
+							else {
+								Fse.unlinkSync(dlFile);
+								throw new Error('Incomplete download');
+							}
+							if (times != 1) errorThread--;
+						})
+						.catch(e => {
+							if (e && e.response && e.response.status == 404) {
+								console.log('  ' + '404'.bgRed + `\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${'pid'.gray} ${illust.id.toString().cyan}\t${illust.title.yellow}`);
+								return;
+							} else if (times == 1) errorThread++;
+							if (global.p_debug) console.log(e);
+							console.log(
+								`  ${times >= 10 ? `[${threadID}]`.bgRed : `[${threadID}]`.bgYellow}\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${'pid'.gray} ${
+									illust.id.toString().cyan
+								}\t${illust.title.yellow}`
+							);
+							return tryDownload(times + 1);
+						});
 				})(1);
 			}
 		});
@@ -239,13 +239,14 @@ function downloadIllusts(illusts, dldir, totalThread) {
 
 	//开始多线程
 	for (let t = 0; t < totalThread; t++)
-		threads.push(singleThread(t).catch(e => {
-			if (global.p_debug) console.log(e);
-		}));
+		threads.push(
+			singleThread(t).catch(e => {
+				if (global.p_debug) console.log(e);
+			})
+		);
 
 	return Promise.all(threads);
 }
-
 
 /**
  * 得到某个画师对应的下载目录名
@@ -255,19 +256,18 @@ function downloadIllusts(illusts, dldir, totalThread) {
  */
 async function getIllustratorNewDir(data) {
 	//下载目录
-	let mainDir = config.path;
-	if (!Fs.existsSync(mainDir)) Tools.mkdirsSync(mainDir);
+	const mainDir = config.path;
 	let dldir = null;
 
 	//先搜寻已有目录
-	await Tools.readDirSync(mainDir).then(files => {
-		for (let file of files) {
-			if (file.indexOf('(' + data.id + ')') === 0) {
-				dldir = file;
-				break;
-			}
+	Fse.ensureDirSync(mainDir);
+	const files = Fse.readdirSync(mainDir);
+	for (let file of files) {
+		if (file.indexOf('(' + data.id + ')') === 0) {
+			dldir = file;
+			break;
 		}
-	});
+	}
 
 	//去除画师名常带的摊位后缀，以及非法字符
 	let iName = data.name;
@@ -280,14 +280,13 @@ async function getIllustratorNewDir(data) {
 	if (!dldir) {
 		dldir = dldirNew;
 	} else if (config.autoRename && dldir != dldirNew) {
-		console.log("\nDirectory renamed: %s => %s", dldir.yellow, dldirNew.green);
-		Fs.renameSync(Path.join(mainDir, dldir), Path.join(mainDir, dldirNew));
+		console.log('\nDirectory renamed: %s => %s', dldir.yellow, dldirNew.green);
+		Fse.renameSync(Path.join(mainDir, dldir), Path.join(mainDir, dldirNew));
 		dldir = dldirNew;
 	}
 
 	return dldir;
 }
-
 
 /**
  * 根据PID下载
@@ -303,18 +302,16 @@ async function downloadByIllusts(illustJSON) {
 	await downloadIllusts(illusts, Path.join(config.path, 'PID'), config.thread);
 }
 
-
 function sleep(ms) {
 	return new Promise(resolve => {
 		setTimeout(resolve, ms);
 	});
 }
 
-
 module.exports = {
 	setConfig,
 	setAgent,
 	downloadByIllusts,
 	downloadByIllustrators,
-	downloadByBookmark
+	downloadByBookmark,
 };

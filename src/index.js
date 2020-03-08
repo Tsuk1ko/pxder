@@ -9,7 +9,6 @@ require('colors');
 const PixivApi = require('./pixiv-api-client-mod');
 const Downloader = require('./downloader');
 const Illustrator = require('./illustrator');
-const Fs = require('fs');
 const Fse = require('fs-extra');
 const Path = require('path');
 const Tools = require('./tools');
@@ -33,8 +32,8 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	static initConfig(forceInit = false) {
-		if (!Fs.existsSync(configFileDir)) Fs.mkdirSync(configFileDir);
-		if (!Fs.existsSync(configFile) || forceInit)
+		Fse.ensureDirSync(configFileDir);
+		if (!Fse.existsSync(configFile) || forceInit)
 			Fse.writeJSONSync(configFile, {
 				download: {
 					thread: 5,
@@ -69,7 +68,7 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	static writeConfig(config) {
-		Fs.writeFileSync(configFile, JSON.stringify(config));
+		Fse.writeFileSync(configFile, JSON.stringify(config));
 	}
 
 	/**
@@ -305,10 +304,10 @@ class PixivFunc {
 
 		//临时文件
 		const tmpJson = Path.join(configFileDir, (isPrivate ? 'private' : 'public') + '.json');
-		if (!Fs.existsSync(__config.download.path)) Fs.mkdirSync(__config.download.path);
+		Fse.ensureDirSync(__config.download.path);
 
 		//取得关注列表
-		if (!Fs.existsSync(tmpJson) || force) {
+		if (!Fse.existsSync(tmpJson) || force) {
 			console.log('\nCollecting your follows');
 
 			await this.getAllMyFollow(isPrivate).then(ret => {
@@ -322,7 +321,7 @@ class PixivFunc {
 				);
 			});
 
-			Fs.writeFileSync(tmpJson, JSON.stringify(follows));
+			Fse.writeFileSync(tmpJson, JSON.stringify(follows));
 		} else follows = require(tmpJson);
 
 		//数据恢复
@@ -338,11 +337,11 @@ class PixivFunc {
 		//开始下载
 		await Downloader.downloadByIllustrators(illustrators, () => {
 			follows.shift();
-			Fs.writeFileSync(tmpJson, JSON.stringify(follows));
+			Fse.writeFileSync(tmpJson, JSON.stringify(follows));
 		});
 
 		//清除临时文件
-		Fs.unlinkSync(tmpJson);
+		Fse.unlinkSync(tmpJson);
 	}
 
 	/**
@@ -353,12 +352,12 @@ class PixivFunc {
 	async downloadUpdate() {
 		const uids = [];
 		//得到文件夹内所有UID
-		await Tools.readDirSync(__config.download.path).then(files => {
-			for (const file of files) {
-				const search = /^\(([0-9]+)\)/.exec(file);
-				if (search) uids.push(search[1]);
-			}
-		});
+		Fse.ensureDirSync(__config.download.path);
+		const files = Fse.readdirSync(__config.download.path);
+		for (const file of files) {
+			const search = /^\(([0-9]+)\)/.exec(file);
+			if (search) uids.push(search[1]);
+		}
 		//下载
 		const illustrators = [];
 		uids.forEach(uid => illustrators.push(new Illustrator(uid)));
@@ -383,7 +382,9 @@ class PixivFunc {
 	 */
 	async downloadByPIDs(pids) {
 		const jsons = [];
-		const exists = Fse.readdirSync(Path.join(__config.download.path, 'PID'))
+		const dirPath = Path.join(__config.download.path, 'PID');
+		Fse.ensureDirSync(dirPath);
+		const exists = Fse.readdirSync(dirPath)
 			.map(file => {
 				const search = /^\(([0-9]+)\)/.exec(file);
 				if (search && search[1]) return search[1];
