@@ -34,8 +34,11 @@ program
 	.option('')
 	.option('-U, --update', "update illustrators' illusts in your download path")
 	.option('')
+	.option('    --no-cf', 'download illusts from i.pximg.net instead of i-cf.pximg.net')
+	.option('')
 	.option('    --debug', 'output all error messages while running')
 	.option('    --conf-loca', 'output the location of config and exit')
+	.option('')
 	.version(pkg.version, '-v, --version')
 	.parse(process.argv);
 
@@ -69,6 +72,7 @@ handleArgv()
 		//开始下载
 		console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
 		if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
+		global.cf = program.cf;
 
 		if (program.follow) await pixiv.downloadFollowAll(false, program.force);
 		if (program.followPrivate) await pixiv.downloadFollowAll(true, program.force);
