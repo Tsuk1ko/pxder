@@ -279,10 +279,15 @@ async function getIllustratorNewDir(data) {
 	//决定下载目录
 	if (!dldir) {
 		dldir = dldirNew;
-	} else if (config.autoRename && dldir != dldirNew) {
-		console.log('\nDirectory renamed: %s => %s', dldir.yellow, dldirNew.green);
-		Fse.renameSync(Path.join(mainDir, dldir), Path.join(mainDir, dldirNew));
-		dldir = dldirNew;
+	} else if (config.autoRename && dldir.toLowerCase() != dldirNew.toLowerCase()) {
+		try {
+			Fse.renameSync(Path.join(mainDir, dldir), Path.join(mainDir, dldirNew));
+			dldir = dldirNew;
+			console.log('\nDirectory renamed: %s => %s', dldir.yellow, dldirNew.green);
+		} catch (error) {
+			console.log('\nDirectory rename failed: %s => %s', dldir.yellow, dldirNew.red);
+			console.error(error);
+		}
 	}
 
 	return dldir;
