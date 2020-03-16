@@ -1,10 +1,3 @@
-/*
- * @Author: Jindai Kirin
- * @Date: 2018-08-14 15:53:22
- * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2019-07-01 13:50:15
- */
-
 const Fse = require('fs-extra');
 const Readline = require('readline');
 const Axios = require('axios');
@@ -49,8 +42,17 @@ async function download(dirpath, filename, url, axiosOption) {
 	});
 }
 
+function readJsonSafely(path, defaultValue) {
+	if (!Fse.existsSync(path)) return defaultValue;
+	try {
+		return Fse.readJsonSync(path);
+	} catch (error) {}
+	return defaultValue;
+}
+
 module.exports = {
 	showProgress,
 	clearProgress,
 	download,
+	readJsonSafely,
 };

@@ -1,10 +1,3 @@
-/*
- * @Author: Jindai Kirin
- * @Date: 2018-08-14 14:34:13
- * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2019-06-30 23:51:42
- */
-
 require('colors');
 const PixivApi = require('./pixiv-api-client-mod');
 const Downloader = require('./downloader');
@@ -68,7 +61,7 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	static writeConfig(config) {
-		Fse.writeFileSync(configFile, JSON.stringify(config));
+		Fse.writeJsonSync(configFile, config);
 	}
 
 	/**
@@ -299,17 +292,18 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	async downloadFollowAll(isPrivate, force) {
-		let follows = [];
+		let follows = null;
 		let illustrators = null;
 
 		//临时文件
 		const tmpJson = Path.join(configFileDir, (isPrivate ? 'private' : 'public') + '.json');
+		const tmpJsonExist = Fse.existsSync(tmpJson);
 		Fse.ensureDirSync(__config.download.path);
 
 		//取得关注列表
-		if (!Fse.existsSync(tmpJson) || force) {
+		if (!tmpJsonExist || force || (tmpJsonExist && !(follows = Tools.readJsonSafely(tmpJson, null)))) {
 			console.log('\nCollecting your follows');
-
+			follows = [];
 			await this.getAllMyFollow(isPrivate).then(ret => {
 				illustrators = ret;
 				ret.forEach(illustrator =>
@@ -320,9 +314,8 @@ class PixivFunc {
 					})
 				);
 			});
-
-			Fse.writeFileSync(tmpJson, JSON.stringify(follows));
-		} else follows = require(tmpJson);
+			Fse.writeJSONSync(tmpJson, follows);
+		}
 
 		//数据恢复
 		if (!illustrators) {
@@ -337,7 +330,7 @@ class PixivFunc {
 		//开始下载
 		await Downloader.downloadByIllustrators(illustrators, () => {
 			follows.shift();
-			Fse.writeFileSync(tmpJson, JSON.stringify(follows));
+			Fse.writeJSONSync(tmpJson, follows);
 		});
 
 		//清除临时文件
