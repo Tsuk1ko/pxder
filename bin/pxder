@@ -4,7 +4,7 @@
 
 require('colors');
 const Pixiv = require('../src/index');
-const CheckUpdate = require('../src/checkUpdate');
+const UpdateChecker = require('../src/updateChecker');
 const pkg = require('../package.json');
 const { checkProxy, getSysProxy } = require('../src/proxy');
 
@@ -62,8 +62,15 @@ handleArgv()
 		Pixiv.applyConfig(config);
 
 		//检查更新
-		CheckUpdate.init();
-		const laterVersion = CheckUpdate.check();
+		const updater = new UpdateChecker();
+		const updateChecking = updater.check();
+		const logNewVersionAndExit = () => {
+			if (updater.haveUpdate()) {
+				console.log(`New version ${updater.getLatestVersion().yellow} is available.`);
+				console.log(`You can upgrade via the '${'npm i -g pxder'.yellow}' command.\n`);
+			}
+			process.exit();
+		};
 
 		//重登陆
 		const pixiv = new Pixiv();
@@ -102,17 +109,11 @@ handleArgv()
 		pixiv.clearReloginInterval();
 		console.log();
 
-		const checkTimeout = setTimeout(() => {
-			process.exit();
-		}, 3000);
-
-		laterVersion.then(version => {
-			clearTimeout(checkTimeout);
-			if (version) {
-				console.log(`New version ${version.yellow} is available.`);
-				console.log(`You can upgrade via the '${'npm i -g pxder'.yellow}' command.\n`);
-			}
-		});
+		if (updater.recentlyChecked()) logNewVersionAndExit();
+		else {
+			updateChecking.then(logNewVersionAndExit);
+			setTimeout(logNewVersionAndExit, 3000);
+		}
 	})
 	.catch(e => {
 		if (global.p_debug) console.error(e);
