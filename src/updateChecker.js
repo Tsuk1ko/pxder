@@ -16,11 +16,14 @@ class UpdateChecker {
 		});
 	}
 
-	async check() {
+	check() {
 		const agent = global.proxyAgent;
-		const latestVersion = await getLatestVersion(name, agent ? { agent } : {});
-		this.info.latestVersion = latestVersion;
-		Fse.writeJsonSync(checkLogFile, this.info);
+		return getLatestVersion(name, agent ? { agent } : {})
+			.then(latestVersion => {
+				this.info.latestVersion = latestVersion;
+				Fse.writeJsonSync(checkLogFile, this.info);
+			})
+			.catch();
 	}
 
 	haveUpdate() {
