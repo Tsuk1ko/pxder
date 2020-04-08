@@ -267,9 +267,7 @@ class PixivFunc {
 	async downloadByUIDs(uids) {
 		const uidArray = Array.isArray(uids) ? uids : [uids];
 		for (const uid of uidArray) {
-			await Downloader.downloadByIllustrators([new Illustrator(uid)]).catch(e => {
-				console.error(e);
-			});
+			await Downloader.downloadByIllustrators([new Illustrator(uid)]).catch(Tools.logError);
 		}
 	}
 

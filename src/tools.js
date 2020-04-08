@@ -55,4 +55,5 @@ module.exports = {
 	clearProgress,
 	download,
 	readJsonSafely,
+	logError: require('./logError'),
 };
