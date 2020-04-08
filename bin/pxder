@@ -5,6 +5,7 @@
 require('colors');
 const Pixiv = require('../src/index');
 const UpdateChecker = require('../src/updateChecker');
+const logError = require('../src/logError');
 const pkg = require('../package.json');
 const { checkProxy, getSysProxy } = require('../src/proxy');
 
@@ -14,6 +15,8 @@ const readline = require('readline-sync');
 /*
  * Usage
  */
+
+const optionNewLine = '\n                        ';
 
 program
 	.usage('<options> [value]')
@@ -33,6 +36,8 @@ program
 	.option('-B, --bookmark-private', 'download / update illusts from your private bookmark')
 	.option('')
 	.option('-U, --update', "update illustrators' illusts in your download path")
+	.option('')
+	.option('-M, --no-ugoira-meta', `will not request meta data for ugoira, it helps save time or${optionNewLine}avoid API rate limit error when downloading a tons of ugoiras`)
 	.option('')
 	.option('    --no-cf', 'download illusts from i.pximg.net instead of i-cf.pximg.net')
 	.option('')
@@ -79,7 +84,6 @@ handleArgv()
 		//开始下载
 		console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
 		if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
-		global.cf = program.cf;
 
 		if (program.follow) await pixiv.downloadFollowAll(false, program.force);
 		if (program.followPrivate) await pixiv.downloadFollowAll(true, program.force);
@@ -116,17 +120,21 @@ handleArgv()
 		}
 	})
 	.catch(e => {
-		if (global.p_debug) console.error(e);
+		if (global.p_debug) logError(e);
 		else {
-			if (e.errors && e.errors.system && e.errors.system.message) console.error('\nERROR: '.red + e.errors.system.message + '\n');
-			else console.error(e);
+			let errMsg;
+			if ((errMsg = e.errors && e.errors.system && e.errors.system.message)) console.error(`\n${'ERROR:'.red} ${errMsg}\n`);
+			else logError(e);
 		}
 		process.exit();
 	});
 
 async function handleArgv() {
-	//debug
+	//全局参数
 	if (program.debug) global.p_debug = true;
+	global.ugoiraMeta = program.ugoiraMeta;
+	global.cf = program.cf;
+
 	//其他选项
 	let pass = false;
 	if (program.login) {

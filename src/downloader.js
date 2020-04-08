@@ -1,10 +1,3 @@
-/*
- * @Author: Jindai Kirin
- * @Date: 2018-08-23 08:44:16
- * @Last Modified by: Jindai Kirin
- * @Last Modified time: 2019-08-21 19:02:39
- */
-
 const Illust = require('./illust');
 const Illustrator = require('./illustrator');
 const Fse = require('fs-extra');
