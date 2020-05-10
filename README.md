@@ -1,5 +1,7 @@
 # pixiv downloader
 
+> 本项目因本人太懒而进入仅维护状态，暂时不会考虑任何 Feature Request
+
 ![运行示例](https://i.loli.net/2018/08/20/5b7aaccfb1c4a.gif)
 
 简单写下说明（主要针对 Windows 用户）
