@@ -73,11 +73,12 @@ pxder --setting
 有五项设置，按下数字键选择一项进行设置，然后按照要求输入之后回车即可
 
 ```bash
-[1] Download path     # 下载目录，必须设置
-[2] Download thread   # 下载线程数
-[3] Download timeout  # 下载超时
-[4] Auto rename       # 自动重命名（文件夹）
-[5] Proxy             # 使用代理
+[1] Download path           # 下载目录，必须设置
+[2] Download thread         # 下载线程数
+[3] Download timeout        # 下载超时
+[4] Auto rename             # 自动重命名（文件夹）
+[5] Proxy                   # 使用代理
+[6] Certificate validation  # 证书校验
 ```
 
 - **下载目录**  
@@ -100,6 +101,8 @@ pxder --setting
   
   如果输入空行则会尝试从环境变量中依次读取`all_proxy`,`https_proxy`,`https_proxy`  
   如果想完全禁止使用代理，请输入`disable`
+- **证书校验**  
+  如果你使用自签证书本地反代的方式使 P 站可被访问，则需要关闭证书校验，因为 Node.js 并不会自动读取系统信任证书
 
 ## 说明
 
