@@ -3,6 +3,7 @@
 'use strict';
 
 require('colors');
+const { moveCursor } = require('readline');
 const Pixiv = require('../src/index');
 const UpdateChecker = require('../src/updateChecker');
 const logError = require('../src/logError');
@@ -52,6 +53,16 @@ program
  */
 const config = Pixiv.readConfig();
 
+if (config.ignoreCertificate) {
+	process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+	process.on('warning', ({ message }) => {
+		if (/NODE_TLS_REJECT_UNAUTHORIZED/.test(message)) {
+			moveCursor(process.stdout, 0, -1);
+			process.stdout.write('\x1b[K');
+		}
+	});
+}
+
 handleArgv()
 	.then(async () => {
 		if (program.confLoca) {
@@ -82,6 +93,7 @@ handleArgv()
 		await pixiv.relogin();
 
 		//开始下载
+		if (config.ignoreCertificate) console.warn('Warning: Certificate validation is disabled. You should only disable it when using local reverse proxy with self signed certificate.'.yellow);
 		console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
 		if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
 
@@ -148,6 +160,7 @@ async function handleArgv() {
 			console.log('\nLogin success!\n'.green);
 		} catch (error) {
 			console.log('\nLogin fail!'.red, 'Please check your input or proxy setting.\n');
+			console.log('Especially, you should disable certificate validation in setting if you are using local reverse proxy with self signed certificate.');
 			if (global.p_debug) console.error(error);
 		}
 	} else if (program.logout) {
@@ -162,11 +175,12 @@ async function handleArgv() {
 			console.log('Pxder Options'.green);
 			const sysProxy = getSysProxy();
 			const options = [
-				'Download path\t'.yellow + (config.download.path ? config.download.path : 'Null, please set one'.bgRed),
-				'Download thread\t'.yellow + config.download.thread,
-				'Download timeout\t'.yellow + config.download.timeout,
-				'Auto rename\t\t'.yellow + (config.download.autoRename ? 'On' : 'Off'),
-				'Proxy\t\t'.yellow + (checkProxy(config.proxy) && config.proxy ? config.proxy : checkProxy(sysProxy) && sysProxy ? `[env] ${sysProxy}` : 'disable'),
+				'Download path\t\t'.yellow + (config.download.path ? config.download.path : 'Null, please set one'.bgRed),
+				'Download thread\t\t'.yellow + config.download.thread,
+				'Download timeout\t\t'.yellow + config.download.timeout,
+				'Auto rename\t\t\t'.yellow + (config.download.autoRename ? 'On' : 'Off'),
+				'Proxy\t\t\t'.yellow + (checkProxy(config.proxy) && config.proxy ? config.proxy : checkProxy(sysProxy) && sysProxy ? `[env] ${sysProxy}` : 'Disabled'),
+				'Certificate validation\t'.yellow + (config.ignoreCertificate ? 'Disabled' : 'Enabled'),
 			];
 			index = readline.keyInSelect(options, 'Press a key:', {
 				cancel: 'Exit'.bgMagenta,
@@ -205,7 +219,7 @@ async function handleArgv() {
 					break;
 
 				case 3: //自动重命名
-					config.download.autoRename = readline.keyInYNStrict('Do you want to turn on auto rename?'.yellow);
+					config.download.autoRename = !config.download.autoRename;
 					break;
 
 				case 4: //代理设置
@@ -224,6 +238,11 @@ async function handleArgv() {
 							limitMessage: '\nIncorrect format, please re-input.\n'.bgRed,
 							limit: checkProxy,
 						}
+					);
+					break;
+				case 5:
+					config.ignoreCertificate = readline.keyInYNStrict(
+						'Do you really want to disable certificate validation? (Y: disable, N: enable)\nNotice: You should only disable it when using local reverse proxy with self signed certificate.'.yellow
 					);
 					break;
 			} //switch end
