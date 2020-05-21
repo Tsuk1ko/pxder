@@ -53,15 +53,7 @@ program
  */
 const config = Pixiv.readConfig();
 
-if (config.ignoreCertificate) {
-	process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-	process.on('warning', ({ message }) => {
-		if (/NODE_TLS_REJECT_UNAUTHORIZED/.test(message)) {
-			moveCursor(process.stdout, 0, -1);
-			process.stdout.write('\x1b[K');
-		}
-	});
-}
+if (config.ignoreCertificate) process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 handleArgv()
 	.then(async () => {
@@ -93,7 +85,6 @@ handleArgv()
 		await pixiv.relogin();
 
 		//开始下载
-		if (config.ignoreCertificate) console.warn('Warning: Certificate validation is disabled. You should only disable it when using local reverse proxy with self signed certificate.'.yellow);
 		console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
 		if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
 
@@ -138,6 +129,7 @@ handleArgv()
 			if ((errMsg = e.errors && e.errors.system && e.errors.system.message)) console.error(`\n${'ERROR:'.red} ${errMsg}\n`);
 			else logError(e);
 		}
+		if (/certificate/i.test(e)) console.log('You should disable certificate validation in setting if you are using local reverse proxy with self signed certificate.'.yellow);
 		process.exit();
 	});
 
@@ -242,7 +234,8 @@ async function handleArgv() {
 					break;
 				case 5:
 					config.ignoreCertificate = readline.keyInYNStrict(
-						'Do you really want to disable certificate validation? (Y: disable, N: enable)\nNotice: You should only disable it when using local reverse proxy with self signed certificate.'.yellow
+						'Do you really want to disable certificate validation? (Y: disable, N: enable)\nNotice: You should only disable it when using local reverse proxy with self signed certificate.'
+							.yellow
 					);
 					break;
 			} //switch end
