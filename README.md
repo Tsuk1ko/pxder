@@ -1,6 +1,6 @@
 # pixiv downloader
 
-> 本项目因本人太懒而进入仅维护状态，暂时不会考虑任何 Feature Request
+> 本项目因本人太懒而进入仅维护状态，暂时不会考虑任何非必要的 Feature Request
 
 ![运行示例](https://i.loli.net/2018/08/20/5b7aaccfb1c4a.gif)
 
@@ -103,6 +103,7 @@ pxder --setting
   如果想完全禁止使用代理，请输入`disable`
 - **证书校验**  
   如果你使用自签证书本地反代的方式使 P 站可被访问，则需要关闭证书校验，因为 Node.js 并不会自动读取系统信任证书
+  另外对于本地反代有一些注意事项，请见最后
 
 ## 说明
 
@@ -229,3 +230,10 @@ pxder -p 70593670,70594912,70595516
   出错时输出详细的错误信息，如果你发现了 bug 想要提 issue，请尽量附上加了该参数时的错误日志
 - `--conf-loca`  
   输出 pxder 的配置存放路径
+
+## 本地反代注意事项
+
+1. 需要在 pxder 设置中关闭 Certificate validation
+2. 以下两个域名必须本地反代，即 hosts 指向`127.0.0.1`，在参考各种教程时请注意，有可能需要手动补 nginx 配置
+   - oauth.secure.pixiv.net
+   - app-api.pixiv.net
