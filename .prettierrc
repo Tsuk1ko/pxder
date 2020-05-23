@@ -5,5 +5,13 @@
 	"arrowParens": "avoid",
 	"useTabs": true,
 	"tabWidth": 4,
-	"semi": true
+	"semi": true,
+	"overrides": [
+		{
+			"files": "src/pixiv-api-client-mod.js",
+			"options": {
+				"useTabs": false
+			}
+		}
+	]
 }
