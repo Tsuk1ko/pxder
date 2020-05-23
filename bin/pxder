@@ -52,8 +52,6 @@ program
  */
 const config = Pixiv.readConfig();
 
-if (config.ignoreCertificate) process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 handleArgv()
 	.then(async () => {
 		if (program.confLoca) {
@@ -85,7 +83,8 @@ handleArgv()
 
 		//开始下载
 		console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
-		if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
+		if (config.directMode) console.log('Direct Mode:\t'.cyan + 'Enabled'.yellow);
+		else if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
 
 		if (program.follow) await pixiv.downloadFollowAll(false, program.force);
 		if (program.followPrivate) await pixiv.downloadFollowAll(true, program.force);
@@ -166,12 +165,12 @@ async function handleArgv() {
 			console.log('Pxder Options'.green);
 			const sysProxy = getSysProxy();
 			const options = [
-				'Download path\t\t'.yellow + (config.download.path ? config.download.path : 'Null, please set one'.bgRed),
-				'Download thread\t\t'.yellow + config.download.thread,
-				'Download timeout\t\t'.yellow + config.download.timeout,
-				'Auto rename\t\t\t'.yellow + (config.download.autoRename ? 'On' : 'Off'),
-				'Proxy\t\t\t'.yellow + (checkProxy(config.proxy) && config.proxy ? config.proxy : checkProxy(sysProxy) && sysProxy ? `[env] ${sysProxy}` : 'Disabled'),
-				'Certificate validation\t'.yellow + (config.ignoreCertificate ? 'Disabled' : 'Enabled'),
+				'Download path\t'.yellow + (config.download.path ? config.download.path : 'Null, please set one'.bgRed),
+				'Download thread\t'.yellow + config.download.thread,
+				'Download timeout\t'.yellow + config.download.timeout,
+				'Auto rename\t\t'.yellow + (config.download.autoRename ? 'Enabled' : 'Disabled'),
+				'Proxy\t\t'.yellow + (checkProxy(config.proxy) && config.proxy ? config.proxy : checkProxy(sysProxy) && sysProxy ? `[env] ${sysProxy}` : 'Disabled'),
+				'Direct Mode\t\t'.yellow + (config.directMode ? 'Enabled' : 'Disabled'),
 			];
 			index = readline.keyInSelect(options, 'Press a key:', {
 				cancel: 'Exit'.bgMagenta,
@@ -230,12 +229,10 @@ async function handleArgv() {
 							limit: checkProxy,
 						}
 					);
+					if (config.proxy === 'disable') config.proxy = '';
 					break;
 				case 5:
-					config.ignoreCertificate = readline.keyInYNStrict(
-						'Do you really want to disable certificate validation? (Y: disable, N: enable)\nNotice: You should only disable it when using local reverse proxy with self signed certificate.'
-							.yellow
-					);
+					config.directMode = !config.directMode;
 					break;
 			} //switch end
 

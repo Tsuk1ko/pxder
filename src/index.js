@@ -6,6 +6,7 @@ const Fse = require('fs-extra');
 const Path = require('path');
 const Tools = require('./tools');
 const { getProxyAgent, getSysProxy } = require('./proxy');
+const { Agent } = require('https');
 
 const configFileDir = require('appdata-path').getAppDataPath('pxder');
 const configFile = Path.join(configFileDir, 'config.json');
@@ -107,20 +108,30 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	static applyProxyConfig(config = PixivFunc.readConfig()) {
-		const proxy = config.proxy;
-		const sysProxy = getSysProxy();
-		// if config has no proxy and env has, use it
-		const agent = proxy === 'disable' ? null : getProxyAgent(proxy) || getProxyAgent(sysProxy);
-		// fix OAuth may fail if env has set the http proxy
-		if (sysProxy) {
-			delete process.env.all_proxy;
-			delete process.env.http_proxy;
-			delete process.env.https_proxy;
-		}
-		if (agent) {
-			Downloader.setAgent(agent);
-			PixivApi.setAgent(agent);
-			global.proxyAgent = agent;
+		if (config.directMode) {
+			global.p_direct = true;
+			PixivApi.setAgent(
+				new Agent({
+					rejectUnauthorized: false,
+					servername: '',
+				})
+			);
+		} else {
+			const proxy = config.proxy;
+			const sysProxy = getSysProxy();
+			// if config has no proxy and env has, use it
+			const agent = proxy === 'disable' ? null : getProxyAgent(proxy) || getProxyAgent(sysProxy);
+			// fix OAuth may fail if env has set the http proxy
+			if (sysProxy) {
+				delete process.env.all_proxy;
+				delete process.env.http_proxy;
+				delete process.env.https_proxy;
+			}
+			if (agent) {
+				Downloader.setAgent(agent);
+				PixivApi.setAgent(agent);
+				global.proxyAgent = agent;
+			}
 		}
 	}
 

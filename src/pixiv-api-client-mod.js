@@ -32,6 +32,7 @@ const md5 = require('blueimp-md5');
 const Readline = require('readline');
 const moment = require('moment');
 const logError = require('./logError');
+const { parse } = require('url');
 
 const BASE_URL = 'https://app-api.pixiv.net';
 const CLIENT_ID = 'KzEZED7aC0vird8jWyHM38mXjNTY';
@@ -40,7 +41,12 @@ const HASH_SECRET = '28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0
 const filter = 'for_ios';
 
 function callApi(url, options) {
-    const finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
+    let finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
+    if (global.p_direct) {
+        const host = parse(finalUrl).host;
+        finalUrl = finalUrl.replace(`//${host}`, '//210.140.131.223');
+        options.headers.Host = host;
+    }
     return axios(finalUrl, options)
         .then(res => res.data)
         .catch(err => {
@@ -111,24 +117,16 @@ class PixivApi {
             }),
             data,
         };
-        return axios('https://oauth.secure.pixiv.net/auth/token', options)
-            .then(res => {
-                this.auth = res.data.response;
-                // eslint-disable-next-line no-unneeded-ternary
-                this.rememberPassword = rememberPassword === false ? false : true;
-                if (rememberPassword) {
-                    this.username = username;
-                    this.password = password;
-                }
-                return res.data.response;
-            })
-            .catch(err => {
-                if (err.response) {
-                    throw err.response.data;
-                } else {
-                    throw err.message;
-                }
-            });
+        return callApi('https://oauth.secure.pixiv.net/auth/token', options).then(data => {
+            this.auth = data.response;
+            // eslint-disable-next-line no-unneeded-ternary
+            this.rememberPassword = rememberPassword === false ? false : true;
+            if (rememberPassword) {
+                this.username = username;
+                this.password = password;
+            }
+            return data.response;
+        });
     }
 
     logout() {
@@ -162,47 +160,10 @@ class PixivApi {
             }),
             data,
         };
-        return axios('https://oauth.secure.pixiv.net/auth/token', options)
-            .then(res => {
-                this.auth = res.data.response;
-                return res.data.response;
-            })
-            .catch(err => {
-                if (err.response) {
-                    throw err.response.data;
-                } else {
-                    throw err.message;
-                }
-            });
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    createProvisionalAccount(nickname) {
-        if (!nickname) {
-            return Promise.reject(new Error('nickname required'));
-        }
-        const data = qs.stringify({
-            ref: 'pixiv_ios_app_provisional_account',
-            user_name: nickname,
+        return callApi('https://oauth.secure.pixiv.net/auth/token', options).then(data => {
+            this.auth = data.response;
+            return data.response;
         });
-
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                Authorization: 'Bearer WHDWCGnwWA2C8PRfQSdXJxjXp0G6ULRaRkkd6t5B6h8',
-            },
-            data,
-        };
-        return axios('https://accounts.pixiv.net/api/provisional-accounts/create', options)
-            .then(res => res.data.body)
-            .catch(err => {
-                if (err.response) {
-                    throw err.response.data;
-                } else {
-                    throw err.message;
-                }
-            });
     }
 
     // require auth
