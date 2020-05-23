@@ -3,7 +3,6 @@
 'use strict';
 
 require('colors');
-const { moveCursor } = require('readline');
 const Pixiv = require('../src/index');
 const UpdateChecker = require('../src/updateChecker');
 const logError = require('../src/logError');

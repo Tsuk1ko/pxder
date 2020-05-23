@@ -31,6 +31,7 @@ const qs = require('qs');
 const md5 = require('blueimp-md5');
 const Readline = require('readline');
 const moment = require('moment');
+const logError = require('./logError');
 
 const BASE_URL = 'https://app-api.pixiv.net';
 const CLIENT_ID = 'KzEZED7aC0vird8jWyHM38mXjNTY';
@@ -44,6 +45,7 @@ function callApi(url, options) {
         .then(res => res.data)
         .catch(err => {
             // mod
+            if (global.p_debug) logError(err);
             if (err.code == 'ECONNRESET') {
                 Readline.clearLine(process.stdout, 0);
                 Readline.cursorTo(process.stdout, 0);
