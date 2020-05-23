@@ -44,7 +44,7 @@ function callApi(url, options) {
     let finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
     if (global.p_direct) {
         const host = parse(finalUrl).host;
-        finalUrl = finalUrl.replace(`//${host}`, '//210.140.131.223');
+        finalUrl = finalUrl.replace(`//${host}`, '//074948.xyz');
         options.headers.Host = host;
     }
     return axios(finalUrl, options)
