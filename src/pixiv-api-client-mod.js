@@ -45,7 +45,10 @@ function callApi(url, options) {
         .then(res => res.data)
         .catch(err => {
             // mod
-            if (global.p_debug) logError(err);
+            if (global.p_debug) {
+                console.error(finalUrl);
+                logError(err);
+            }
             if (err.code == 'ECONNRESET') {
                 Readline.clearLine(process.stdout, 0);
                 Readline.cursorTo(process.stdout, 0);
