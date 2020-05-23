@@ -169,8 +169,9 @@ async function handleArgv() {
 				'Download thread\t'.yellow + config.download.thread,
 				'Download timeout\t'.yellow + config.download.timeout,
 				'Auto rename\t\t'.yellow + (config.download.autoRename ? 'Enabled' : 'Disabled'),
-				'Proxy\t\t'.yellow + (checkProxy(config.proxy) && config.proxy ? config.proxy : checkProxy(sysProxy) && sysProxy ? `[env] ${sysProxy}` : 'Disabled'),
-				'Direct Mode\t\t'.yellow + (config.directMode ? 'Enabled' : 'Disabled'),
+				'Proxy\t\t'.yellow +
+					(checkProxy(config.proxy) && config.proxy ? (config.proxy === 'disable' ? 'Disabled' : config.proxy) : checkProxy(sysProxy) && sysProxy ? `[env] ${sysProxy}` : 'None'),
+				'Direct mode\t\t'.yellow + (config.directMode ? 'Enabled' : 'Disabled'),
 			];
 			index = readline.keyInSelect(options, 'Press a key:', {
 				cancel: 'Exit'.bgMagenta,
@@ -221,7 +222,7 @@ async function handleArgv() {
 							'  http://user:passwd@127.0.0.1:1080\n' +
 							'  socks://127.0.0.1:1080\n' +
 							'If you input nothing, pxder will load proxy from environment variables if avaliable.\n'.yellow +
-							'If you want to DISABLE it, please input '.yellow +
+							'If you want to fully DISABLE it, please input '.yellow +
 							'disable'.red +
 							'.\n'.yellow,
 						{
@@ -229,7 +230,6 @@ async function handleArgv() {
 							limit: checkProxy,
 						}
 					);
-					if (config.proxy === 'disable') config.proxy = '';
 					break;
 				case 5:
 					config.directMode = !config.directMode;
