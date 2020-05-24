@@ -113,7 +113,7 @@ class PixivFunc {
 			PixivApi.setAgent(
 				new Agent({
 					rejectUnauthorized: false,
-					servername: 'global.jd.com',
+					servername: '',
 				})
 			);
 		} else {
