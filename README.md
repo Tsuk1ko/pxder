@@ -78,7 +78,7 @@ pxder --setting
 [3] Download timeout        # 下载超时
 [4] Auto rename             # 自动重命名（文件夹）
 [5] Proxy                   # 使用代理
-[6] Direct Mode             # 直连模式
+[6] Direct mode             # 直连模式
 ```
 
 - **下载目录**  
@@ -102,7 +102,7 @@ pxder --setting
   如果输入空行则会尝试从环境变量中依次读取`all_proxy`,`https_proxy`,`https_proxy`  
   如果想完全禁止使用代理，请输入`disable`
 - **直连模式**  
-  利用域前置（Domain Fronting）绕过 SNI 审查，达到直连使用的目的
+  利用域前置（Domain Fronting）绕过 SNI 审查，达到直连使用的目的  
   启用后，将会忽略代理设置
 
 ## 说明
