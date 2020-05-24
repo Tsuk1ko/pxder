@@ -171,38 +171,6 @@ class PixivApi {
         return this.requestUrl(`/v1/user/me/state`);
     }
 
-    editUserAccount(fields) {
-        if (!fields) {
-            return Promise.reject(new Error('fields required'));
-        }
-
-        const data = qs.stringify(
-            {
-                current_password: fields.currentPassword,
-                new_user_account: fields.pixivId, // changeable once per account
-                new_password: fields.newPassword, // required if current account is provisional
-                new_mail_address: fields.email,
-            },
-            { skipNulls: true }
-        );
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            data,
-        };
-
-        return this.requestUrl('https://accounts.pixiv.net/api/account/edit', options);
-    }
-
-    sendAccountVerificationEmail() {
-        const options = {
-            method: 'POST',
-        };
-        return this.requestUrl('/v1/mail-authentication/send', options);
-    }
-
     searchIllust(word, options) {
         if (!word) {
             return Promise.reject(new Error('word required'));
