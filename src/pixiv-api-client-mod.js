@@ -32,7 +32,6 @@ const md5 = require('blueimp-md5');
 const Readline = require('readline');
 const moment = require('moment');
 const logError = require('./logError');
-const { parse } = require('url');
 
 const BASE_URL = 'https://app-api.pixiv.net';
 const CLIENT_ID = 'KzEZED7aC0vird8jWyHM38mXjNTY';
@@ -43,9 +42,10 @@ const filter = 'for_ios';
 function callApi(url, options) {
     let finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
     if (global.p_direct) {
-        const host = parse(finalUrl).host;
-        finalUrl = finalUrl.replace('pixiv.net', '074948.xyz');
-        options.headers.Host = host;
+        const url = new URL(finalUrl);
+        options.headers.Host = url.host;
+        url.host = url.host.replace('pixiv.net', '074948.xyz');
+        finalUrl = url.href;
     }
     return axios(finalUrl, options)
         .then(res => res.data)
