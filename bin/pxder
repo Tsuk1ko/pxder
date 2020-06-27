@@ -3,6 +3,7 @@
 'use strict';
 
 require('colors');
+const Path = require('path');
 const Pixiv = require('../src/index');
 const UpdateChecker = require('../src/updateChecker');
 const logError = require('../src/logError');
@@ -39,6 +40,8 @@ program
 	.option('')
 	.option('-M, --no-ugoira-meta', `will not request meta data for ugoira, it helps save time or${optionNewLine}avoid API rate limit error when downloading a tons of ugoiras`)
 	.option('')
+	.option('-O, --output-dir <dir>', 'Specify download directory')
+	.option('')
 	.option('    --no-cf', 'download illusts from i.pximg.net instead of i-cf.pximg.net')
 	.option('')
 	.option('    --debug', 'output all error messages while running')
@@ -54,11 +57,6 @@ const config = Pixiv.readConfig();
 
 handleArgv()
 	.then(async () => {
-		if (program.confLoca) {
-			console.log(require('appdata-path').getAppDataPath('pxder'));
-			process.exit();
-		}
-
 		//检查配置
 		if (!Pixiv.checkConfig(config)) {
 			console.log('\nRun ' + 'pxder -h'.yellow + ' for more usage information.\n');
@@ -132,6 +130,11 @@ handleArgv()
 	});
 
 async function handleArgv() {
+	if (program.confLoca) {
+		console.log(require('appdata-path').getAppDataPath('pxder'));
+		process.exit();
+	}
+
 	//全局参数
 	if (program.debug) global.p_debug = true;
 	global.ugoiraMeta = program.ugoiraMeta;
@@ -243,8 +246,10 @@ async function handleArgv() {
 	} else {
 		pass = true;
 	}
-	if (!pass) {
-		process.exit();
+	if (!pass) process.exit();
+
+	if (program.outputDir) {
+		config.download.path = Path.resolve(program.outputDir);
 	}
 }
 
