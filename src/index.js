@@ -1,6 +1,7 @@
 require('colors');
 const PixivApi = require('./pixiv-api-client-mod');
 const Downloader = require('./downloader');
+const Illust = require('./illust');
 const Illustrator = require('./illustrator');
 const Fse = require('fs-extra');
 const Path = require('path');
@@ -10,6 +11,14 @@ const { Agent } = require('https');
 
 const configFileDir = require('appdata-path').getAppDataPath('pxder');
 const configFile = Path.join(configFileDir, 'config.json');
+
+const defaultConfig = {
+	download: {
+		thread: 5,
+		timeout: 30,
+	},
+};
+Object.freeze(defaultConfig);
 
 let __config;
 
@@ -27,14 +36,7 @@ class PixivFunc {
 	 */
 	static initConfig(forceInit = false) {
 		Fse.ensureDirSync(configFileDir);
-		if (!Fse.existsSync(configFile) || forceInit)
-			Fse.writeJSONSync(configFile, {
-				download: {
-					thread: 5,
-					timeout: 30,
-					autoRename: false,
-				},
-			});
+		if (!Fse.existsSync(configFile) || forceInit) Fse.writeJSONSync(configFile, defaultConfig);
 	}
 
 	/**
@@ -46,11 +48,16 @@ class PixivFunc {
 	 */
 	static readConfig() {
 		PixivFunc.initConfig();
-		const config = require(configFile);
-		//check
-		if (!config.download.thread) config.download.thread = 5;
-		if (!config.download.autoRename) config.download.autoRename = false;
-		if (!config.download.timeout) config.download.timeout = 30;
+		const config = (() => {
+			try {
+				return Fse.readJsonSync(configFile);
+			} catch (error) {}
+			return defaultConfig;
+		})();
+		// check
+		Object.keys(defaultConfig.download).forEach(key => {
+			if (typeof config.download[key] === 'undefined') config.download[key] = defaultConfig.download[key];
+		});
 		return config;
 	}
 
@@ -170,7 +177,7 @@ class PixivFunc {
 		this.pixiv = new PixivApi();
 		await this.pixiv.refreshAccessToken(refresh_token);
 		Illustrator.setPixiv(this.pixiv);
-		require('./illust').setPixiv(this.pixiv);
+		Illust.setPixiv(this.pixiv);
 		//定时刷新token
 		const p = this.pixiv;
 		this.reloginInterval = setInterval(() => {
