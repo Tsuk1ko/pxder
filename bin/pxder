@@ -125,7 +125,6 @@ handleArgv()
 			if ((errMsg = e.errors && e.errors.system && e.errors.system.message)) console.error(`\n${'ERROR:'.red} ${errMsg}\n`);
 			else logError(e);
 		}
-		if (/certificate/i.test(e)) console.log('You should disable certificate validation in setting if you are using local reverse proxy with self signed certificate.'.yellow);
 		process.exit();
 	});
 
@@ -153,7 +152,6 @@ async function handleArgv() {
 			console.log('\nLogin success!\n'.green);
 		} catch (error) {
 			console.log('\nLogin fail!'.red, 'Please check your input or proxy setting.\n');
-			console.log('Especially, you should disable certificate validation in setting if you are using local reverse proxy with self signed certificate.');
 			if (global.p_debug) console.error(error);
 		}
 	} else if (program.logout) {

@@ -39,12 +39,17 @@ const CLIENT_SECRET = 'W9JZoJe00qPvJsiyCGT3CCtC6ZUtdpKpzMbNlUGP';
 const HASH_SECRET = '28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c';
 const filter = 'for_ios';
 
+const HOSTS = {
+    'oauth.secure.pixiv.net': '210.140.131.218',
+    'app-api.pixiv.net': '210.140.131.218',
+};
+
 function callApi(url, options) {
     let finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
     if (global.p_direct) {
         const url = new URL(finalUrl);
         options.headers.Host = url.host;
-        url.host = url.host.replace('pixiv.net', '074948.xyz');
+        url.host = HOSTS[url.host];
         finalUrl = url.href;
     }
     return axios(finalUrl, options)
