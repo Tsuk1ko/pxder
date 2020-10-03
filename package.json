@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "appdata-path": "^1.0.0",
-    "axios": "^0.19.2",
+    "axios": "^0.20.0",
     "colors": "^1.4.0",
     "commander": "^5.1.0",
     "compare-versions": "^3.6.0",

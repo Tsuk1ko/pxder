@@ -27,7 +27,7 @@ apt-get install -y nodejs
 
 # Centos
 curl -sL https://rpm.nodesource.com/setup_12.x | bash -
-yum install nodejs -y
+yum install -y nodejs
 ```
 
 ## 安装/更新/卸载
