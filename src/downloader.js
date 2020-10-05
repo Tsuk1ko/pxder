@@ -203,10 +203,10 @@ function downloadIllusts(illusts, dldir, totalThread) {
 							await sleep(1000);
 							for (let i = 0; i < 15 && !Fse.existsSync(dlFile); i++) await sleep(200);
 							let dlFileSize = Fse.statSync(dlFile).size;
-							if (dlFileSize == fileSize) Fse.moveSync(dlFile, Path.join(dldir, illust.file));
+							if (!fileSize || dlFileSize == fileSize) Fse.moveSync(dlFile, Path.join(dldir, illust.file));
 							else {
 								Fse.unlinkSync(dlFile);
-								throw new Error('Incomplete download');
+								throw new Error(`Incomplete download ${dlFileSize}/${fileSize}`);
 							}
 							if (times != 1) errorThread--;
 						})
