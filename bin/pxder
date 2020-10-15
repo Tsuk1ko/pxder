@@ -122,8 +122,12 @@ handleArgv()
 		if (global.p_debug) logError(e);
 		else {
 			let errMsg;
-			if ((errMsg = e.errors && e.errors.system && e.errors.system.message)) console.error(`\n${'ERROR:'.red} ${errMsg}\n`);
-			else logError(e);
+			if ((errMsg = e.errors && e.errors.system && e.errors.system.message)) {
+				console.error(`\n${'ERROR:'.red} ${errMsg}\n`);
+				if (errMsg === 'Invalid refresh token') {
+					console.log('Maybe CLIENT_ID and CLIENT_SECRET are updated, please try to relogin.\n'.yellow);
+				}
+			} else logError(e);
 		}
 		process.exit();
 	});

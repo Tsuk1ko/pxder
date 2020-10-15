@@ -34,8 +34,8 @@ const moment = require('moment');
 const logError = require('./logError');
 
 const BASE_URL = 'https://app-api.pixiv.net';
-const CLIENT_ID = 'KzEZED7aC0vird8jWyHM38mXjNTY';
-const CLIENT_SECRET = 'W9JZoJe00qPvJsiyCGT3CCtC6ZUtdpKpzMbNlUGP';
+const CLIENT_ID = 'MOBrBDS8blbauoSck0ZfDbtuzpyT';
+const CLIENT_SECRET = 'lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj';
 const HASH_SECRET = '28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c';
 const filter = 'for_ios';
 
