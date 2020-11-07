@@ -43,10 +43,10 @@ axios@>=0.19.0:
   dependencies:
     follow-redirects "1.5.10"
 
-axios@^0.20.0:
-  version "0.20.0"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.20.0.tgz#057ba30f04884694993a8cd07fa394cff11c50bd"
-  integrity sha512-ANA4rr2BDcmmAQLOKft2fufrtuvlqR+cXNNinUmvfeSNCOF98PZL+7M/v1zIdGo7OLjEA9J2gXJL+j4zGsl0bA==
+axios@^0.21.0:
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.0.tgz#26df088803a2350dff2c27f96fef99fe49442aca"
+  integrity sha512-fmkJBknJKoZwem3/IKSSLpkdNXZeBu5Q7GA/aRsr2btgrptmSCxi2oFjZHqGdK9DoTil9PIHlPIZw2EcRJXRvw==
   dependencies:
     follow-redirects "^1.10.0"
 
@@ -304,10 +304,10 @@ package-json@^6.3.0:
     registry-url "^5.0.0"
     semver "^6.2.0"
 
-pixiv-api-client@^0.22.0:
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/pixiv-api-client/-/pixiv-api-client-0.22.0.tgz#6893903293b0426041fa986658a2e10458e7ed2b"
-  integrity sha512-GU9tMpgecjdx/RiqJVZxVvLk4Ze1a3q01NuwsY3tmgQ5XI3ue6BVU6me/1xPQVh/iTCkrGrpO6J53+4ceYntgQ==
+pixiv-api-client@^0.24.0:
+  version "0.24.0"
+  resolved "https://registry.yarnpkg.com/pixiv-api-client/-/pixiv-api-client-0.24.0.tgz#0923c67480ea956343b0c4e056e789cabb437705"
+  integrity sha512-Xk4M0LZ09T0a94+Y4mrc8hgYeTO5ezYaY5/NwFJu/oXWcsdtHMSuvItZZGP6g12S4g3yvYZN2bTHnFPsQFOOAg==
   dependencies:
     axios ">=0.19.0"
     blueimp-md5 "^2.12.0"
