@@ -37,24 +37,25 @@ const BASE_URL = 'https://app-api.pixiv.net';
 const CLIENT_ID = 'MOBrBDS8blbauoSck0ZfDbtuzpyT';
 const CLIENT_SECRET = 'lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj';
 const HASH_SECRET = '28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c';
-const filter = 'for_ios';
 
 const HOSTS = {
     'oauth.secure.pixiv.net': '210.140.131.218',
     'app-api.pixiv.net': '210.140.131.218',
 };
 
-function callApi(url, options) {
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function callApi(url, options, retry = 2) {
     let finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
     if (global.p_direct) {
-        const url = new URL(finalUrl);
-        options.headers.Host = url.host;
-        url.host = HOSTS[url.host];
-        finalUrl = url.href;
+        const fUrl = new URL(finalUrl);
+        options.headers.Host = fUrl.host;
+        fUrl.host = HOSTS[fUrl.host];
+        finalUrl = fUrl.href;
     }
     return axios(finalUrl, options)
         .then(res => res.data)
-        .catch(err => {
+        .catch(async err => {
             // mod
             if (global.p_debug) {
                 console.error(finalUrl);
@@ -64,11 +65,21 @@ function callApi(url, options) {
                 Readline.clearLine(process.stdout, 0);
                 Readline.cursorTo(process.stdout, 0);
                 console.error('Connection reset detected.'.gray);
+                await sleep(3 * 1000);
                 return callApi(url, options);
-            } else if (err.response) {
-                throw err.response.data;
+            } else if (err.response && err.response.data) {
+                const msg = err.response.data;
+                if (/rate limit/i.test(msg)) {
+                    console.error('Rate limit detected. Pause for 10 minutes.'.gray);
+                    await sleep(10 * 60 * 1000);
+                    return callApi(url, options);
+                } else throw msg;
             } else {
-                throw err.message;
+                if (retry <= 0) throw err.message;
+                console.error('RETRY'.yellow, url);
+                console.error(err.message);
+                await sleep(1000);
+                return callApi(url, options, retry - 1);
             }
         });
 }
@@ -76,11 +87,11 @@ function callApi(url, options) {
 class PixivApi {
     constructor() {
         this.headers = {
-            'App-OS': 'ios',
+            'App-OS': 'android',
             'Accept-Language': 'en-us',
-            'App-OS-Version': '14.0.1',
-            'App-Version': '7.9.4',
-            'User-Agent': 'PixivIOSApp/7.9.4 (iOS 14.0.1; iPhone10,1)',
+            'App-OS-Version': '9.0',
+            'App-Version': '5.0.155',
+            'User-Agent': 'PixivAndroidApp/5.0.155 (Android 9.0; Pixel 3)',
         };
     }
 
@@ -187,7 +198,6 @@ class PixivApi {
                     word,
                     search_target: 'partial_match_for_tags',
                     sort: 'date_desc',
-                    filter,
                 },
                 options
             )
@@ -205,7 +215,6 @@ class PixivApi {
                 {
                     word,
                     search_target: 'partial_match_for_tags',
-                    filter,
                 },
                 options
             )
@@ -224,7 +233,6 @@ class PixivApi {
                     word,
                     search_target: 'partial_match_for_tags',
                     sort: 'date_desc',
-                    filter,
                 },
                 options
             )
@@ -242,7 +250,6 @@ class PixivApi {
                 {
                     word,
                     search_target: 'partial_match_for_tags',
-                    filter,
                 },
                 options
             )
@@ -259,7 +266,6 @@ class PixivApi {
                 {
                     word,
                     search_target: 'partial_match_for_tags',
-                    filter,
                 },
                 options
             )
@@ -276,7 +282,6 @@ class PixivApi {
                 {
                     word,
                     search_target: 'partial_match_for_tags',
-                    filter,
                 },
                 options
             )
@@ -291,7 +296,6 @@ class PixivApi {
         const queryString = qs.stringify(
             Object.assign({
                 word,
-                filter,
             })
         );
         return this.requestUrl(`/v1/search/user?${queryString}`);
@@ -330,7 +334,6 @@ class PixivApi {
             Object.assign(
                 {
                     user_id: id,
-                    filter,
                 },
                 options
             )
@@ -347,7 +350,6 @@ class PixivApi {
             Object.assign(
                 {
                     user_id: id,
-                    filter,
                 },
                 options
             )
@@ -364,7 +366,6 @@ class PixivApi {
             Object.assign(
                 {
                     user_id: id,
-                    filter,
                 },
                 options
             )
@@ -382,7 +383,6 @@ class PixivApi {
                 {
                     user_id: id,
                     restrict: 'public',
-                    filter,
                 },
                 options
             )
@@ -428,7 +428,6 @@ class PixivApi {
                 {
                     user_id: id,
                     restrict: 'public',
-                    filter,
                 },
                 options
             )
@@ -502,7 +501,6 @@ class PixivApi {
             Object.assign(
                 {
                     illust_id: id,
-                    filter,
                 },
                 options
             )
@@ -519,7 +517,6 @@ class PixivApi {
             Object.assign(
                 {
                     illust_id: id,
-                    filter,
                 },
                 options
             )
@@ -532,7 +529,6 @@ class PixivApi {
             Object.assign(
                 {
                     content_type: 'illust',
-                    filter,
                 },
                 options
             )
@@ -557,7 +553,6 @@ class PixivApi {
             Object.assign(
                 {
                     include_ranking_illusts: true,
-                    filter,
                 },
                 options
             )
@@ -570,7 +565,6 @@ class PixivApi {
             Object.assign(
                 {
                     mode: 'day',
-                    filter,
                 },
                 options
             )
@@ -627,26 +621,12 @@ class PixivApi {
     }
 
     trendingTagsIllust(options) {
-        const queryString = qs.stringify(
-            Object.assign(
-                {
-                    filter,
-                },
-                options
-            )
-        );
+        const queryString = qs.stringify(Object.assign({}, options));
         return this.requestUrl(`/v1/trending-tags/illust?${queryString}`);
     }
 
     trendingTagsNovel(options) {
-        const queryString = qs.stringify(
-            Object.assign(
-                {
-                    filter,
-                },
-                options
-            )
-        );
+        const queryString = qs.stringify(Object.assign({}, options));
         return this.requestUrl(`/v1/trending-tags/novel?${queryString}`);
     }
 
@@ -779,7 +759,6 @@ class PixivApi {
             Object.assign(
                 {
                     include_ranking_label: true,
-                    filter,
                 },
                 options
             )
@@ -792,7 +771,6 @@ class PixivApi {
             Object.assign(
                 {
                     content_type: 'manga',
-                    filter,
                 },
                 options
             )
@@ -805,7 +783,6 @@ class PixivApi {
             Object.assign(
                 {
                     include_ranking_novels: true,
-                    filter,
                 },
                 options
             )
@@ -931,14 +908,7 @@ class PixivApi {
     }
 
     userRecommended(options) {
-        const queryString = qs.stringify(
-            Object.assign(
-                {
-                    filter,
-                },
-                options
-            )
-        );
+        const queryString = qs.stringify(Object.assign({}, options));
         return this.requestUrl(`/v1/user/recommended?${queryString}`);
     }
 
@@ -974,7 +944,6 @@ class PixivApi {
             Object.assign(
                 {
                     user_id: id,
-                    filter,
                 },
                 options
             )

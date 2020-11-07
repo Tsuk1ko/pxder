@@ -4,6 +4,6 @@ module.exports = e => {
 			console.error(e.stack);
 			delete e.stack;
 		}
-		console.error(JSON.stringify(e, Object.getOwnPropertyNames(e), 4));
-	} else console.error(e);
+		console.error('ERROR'.red, JSON.stringify(e, Object.getOwnPropertyNames(e), 4));
+	} else console.error('ERROR'.red, e);
 };
