@@ -1,8 +1,9 @@
+require('colors');
 const Illust = require('./illust');
 const Fse = require('fs-extra');
 const Path = require('path');
 const Tools = require('./tools');
-require('colors');
+const { UgoiraDir } = Tools;
 
 const pixivRefer = 'https://www.pixiv.net/';
 
@@ -55,15 +56,18 @@ async function downloadByIllustrators(illustrators, callback) {
 async function getDownloadListByIllustrator(illustrator) {
 	let illusts = [];
 
-	//得到画师下载目录
-	let dir = await illustrator.info().then(getIllustratorNewDir);
+	// 得到画师下载目录
+	const dir = await illustrator.info().then(getIllustratorNewDir);
+	const dldir = Path.join(config.path, dir);
+	const ugoiraDir = new UgoiraDir(dldir);
+	const illustExists = file => (file.endsWith('.zip') ? ugoiraDir.existsSync(file) : Fse.existsSync(Path.join(dldir, file)));
 
 	// 最新画作检查
 	const exampleIllusts = illustrator.exampleIllusts;
 	if (exampleIllusts) {
 		let existNum = 0;
-		for (let ei of exampleIllusts) {
-			if (Fse.existsSync(Path.join(config.path, dir, ei.file))) existNum++;
+		for (const ei of exampleIllusts) {
+			if (illustExists(ei.file)) existNum++;
 			else illusts.push(ei);
 		}
 		if (existNum > 0) {
@@ -107,8 +111,11 @@ async function getDownloadListByIllustrator(illustrator) {
  * @returns
  */
 async function downloadByBookmark(me, isPrivate = false) {
-	//得到画师下载目录
-	let dir = '[bookmark] ' + (isPrivate ? 'Private' : 'Public');
+	// 得到画师下载目录
+	const dir = '[bookmark] ' + (isPrivate ? 'Private' : 'Public');
+	const dldir = Path.join(config.path, dir);
+	const ugoiraDir = new UgoiraDir(dldir);
+	const illustExists = file => (file.endsWith('.zip') ? ugoiraDir.existsSync(file) : Fse.existsSync(Path.join(dldir, file)));
 
 	console.log('\nCollecting illusts of your bookmark');
 
@@ -120,9 +127,9 @@ async function downloadByBookmark(me, isPrivate = false) {
 	let cnt;
 	do {
 		cnt = 0;
-		let temps = await me.bookmarks(isPrivate);
-		for (let temp of temps) {
-			if (!Fse.existsSync(Path.join(config.path, dir, temp.file))) {
+		const temps = await me.bookmarks(isPrivate);
+		for (const temp of temps) {
+			if (!illustExists(temp.file)) {
 				illusts.push(temp);
 				cnt++;
 			}
@@ -131,8 +138,8 @@ async function downloadByBookmark(me, isPrivate = false) {
 
 	Tools.clearProgress(processDisplay);
 
-	//下载
-	await downloadIllusts(illusts.reverse(), Path.join(config.path, dir), config.thread);
+	// 下载
+	await downloadIllusts(illusts.reverse(), Path.join(dldir), config.thread);
 }
 
 /**
