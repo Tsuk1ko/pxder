@@ -25,7 +25,7 @@ class Illustrator {
 
 	async setExampleIllusts(illustsJSON) {
 		this.exampleIllusts = [];
-		for (let illustJSON of illustsJSON) {
+		for (const illustJSON of illustsJSON) {
 			this.exampleIllusts = this.exampleIllusts.concat(await Illust.getIllusts(illustJSON));
 		}
 	}
@@ -66,7 +66,7 @@ class Illustrator {
 		let result = [];
 		let json = {};
 
-		//请求
+		// 请求
 		if (this.next[type]) json = await pixiv.requestUrl(this.next[type]);
 		else {
 			if (type == 'illust') json = await pixiv.userIllusts(this.id);
@@ -76,8 +76,8 @@ class Illustrator {
 			}
 		}
 
-		//数据整合
-		for (let illust of json.illusts) {
+		// 数据整合
+		for (const illust of json.illusts) {
 			result = result.concat(await Illust.getIllusts(illust));
 		}
 
@@ -116,7 +116,7 @@ class Illustrator {
 	 * @memberof Illustrator
 	 */
 	hasNext(nextName) {
-		return this.next[nextName] ? true : false;
+		return !!this.next[nextName];
 	}
 }
 

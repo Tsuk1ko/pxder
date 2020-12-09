@@ -1,5 +1,4 @@
 const Illust = require('./illust');
-const Illustrator = require('./illustrator');
 const Fse = require('fs-extra');
 const Path = require('path');
 const Tools = require('./tools');
@@ -25,7 +24,7 @@ function setAgent(agent) {
  * @param {Function} callback 每成功下载完一个画师时运行的回调
  */
 async function downloadByIllustrators(illustrators, callback) {
-	for (let i in illustrators) {
+	for (const i in illustrators) {
 		const illustrator = illustrators[i];
 
 		const error = await illustrator.info().catch(e => e);
@@ -36,14 +35,14 @@ async function downloadByIllustrators(illustrators, callback) {
 
 		console.log('\nCollecting illusts of ' + (parseInt(i) + 1).toString().green + '/' + illustrators.length + ' uid '.gray + illustrator.id.toString().cyan + ' ' + illustrator.name.yellow);
 
-		//取得下载信息
-		let info = await getDownloadListByIllustrator(illustrator);
+		// 取得下载信息
+		const info = await getDownloadListByIllustrator(illustrator);
 
-		//下载
+		// 下载
 		await downloadIllusts(info.illusts, Path.join(config.path, info.dir), config.thread);
 
-		//回调
-		if (typeof callback == 'function') callback(i);
+		// 回调
+		if (typeof callback === 'function') callback(i);
 	}
 }
 
@@ -59,8 +58,8 @@ async function getDownloadListByIllustrator(illustrator) {
 	//得到画师下载目录
 	let dir = await illustrator.info().then(getIllustratorNewDir);
 
-	//最新画作检查
-	let exampleIllusts = illustrator.exampleIllusts;
+	// 最新画作检查
+	const exampleIllusts = illustrator.exampleIllusts;
 	if (exampleIllusts) {
 		let existNum = 0;
 		for (let ei of exampleIllusts) {
@@ -75,17 +74,17 @@ async function getDownloadListByIllustrator(illustrator) {
 		}
 	}
 
-	//得到未下载的画作
+	// 得到未下载的画作
 	illusts = [];
 
-	let processDisplay = Tools.showProgress(() => illusts.length);
+	const processDisplay = Tools.showProgress(() => illusts.length);
 
 	let cnt;
 	do {
 		cnt = 0;
-		let temps = await illustrator.illusts();
-		for (let temp of temps) {
-			if (!Fse.existsSync(Path.join(config.path, dir, temp.file))) {
+		const temps = await illustrator.illusts();
+		for (const temp of temps) {
+			if (!illustExists(temp.file)) {
 				illusts.push(temp);
 				cnt++;
 			}
@@ -113,10 +112,10 @@ async function downloadByBookmark(me, isPrivate = false) {
 
 	console.log('\nCollecting illusts of your bookmark');
 
-	//得到未下载的画作
-	let illusts = [];
+	// 得到未下载的画作
+	const illusts = [];
 
-	let processDisplay = Tools.showProgress(() => illusts.length);
+	const processDisplay = Tools.showProgress(() => illusts.length);
 
 	let cnt;
 	do {
@@ -145,38 +144,38 @@ async function downloadByBookmark(me, isPrivate = false) {
  * @returns 成功下载的画作数
  */
 function downloadIllusts(illusts, dldir, totalThread) {
-	let tempDir = config.tmp;
+	const tempDir = config.tmp;
 	let totalI = 0;
 
-	//清除残留的临时文件
+	// 清除残留的临时文件
 	if (Fse.existsSync(tempDir)) Fse.removeSync(tempDir);
 
-	//开始多线程下载
+	// 开始多线程下载
 	let errorThread = 0;
 	let pause = false;
-	let hangup = 5 * 60 * 1000;
+	const hangup = 5 * 60 * 1000;
 	let errorTimeout = null;
 
-	//单个线程
+	// 单个线程
 	function singleThread(threadID) {
 		return new Promise(async resolve => {
 			while (true) {
-				let i = totalI++;
-				//线程终止
+				const i = totalI++;
+				// 线程终止
 				if (i >= illusts.length) return resolve(threadID);
 
-				let illust = illusts[i];
+				const illust = illusts[i];
 
-				let options = {
+				const options = {
 					headers: {
 						referer: pixivRefer,
 					},
 					timeout: 1000 * config.timeout,
 				};
-				//代理
+				// 代理
 				if (httpsAgent) options.httpsAgent = httpsAgent;
 
-				//开始下载
+				// 开始下载
 				console.log(`  [${threadID}]\t${(parseInt(i) + 1).toString().green}/${illusts.length}\t ${'pid'.gray} ${illust.id.toString().cyan}\t${illust.title.yellow}`);
 				await (async function tryDownload(times) {
 					if (times > 10) {
@@ -193,16 +192,16 @@ function downloadIllusts(illusts, dldir, totalThread) {
 						await sleep(hangup);
 						pause = false;
 					}
-					//失败重试
+					// 失败重试
 					return Tools.download(tempDir, illust.file, illust.url, options)
 						.then(async res => {
-							//文件完整性校验
-							let fileSize = res.headers['content-length'];
-							let dlFile = Path.join(tempDir, illust.file);
-							//针对Linux文件系统不明bug
+							// 文件完整性校验
+							const fileSize = res.headers['content-length'];
+							const dlFile = Path.join(tempDir, illust.file);
+							// 针对Linux文件系统不明bug
 							await sleep(1000);
 							for (let i = 0; i < 15 && !Fse.existsSync(dlFile); i++) await sleep(200);
-							let dlFileSize = Fse.statSync(dlFile).size;
+							const dlFileSize = Fse.statSync(dlFile).size;
 							if (!fileSize || dlFileSize == fileSize) Fse.moveSync(dlFile, Path.join(dldir, illust.file));
 							else {
 								Fse.unlinkSync(dlFile);
@@ -228,9 +227,9 @@ function downloadIllusts(illusts, dldir, totalThread) {
 		});
 	}
 
-	let threads = [];
+	const threads = [];
 
-	//开始多线程
+	// 开始多线程
 	for (let t = 0; t < totalThread; t++)
 		threads.push(
 			singleThread(t).catch(e => {
@@ -248,28 +247,28 @@ function downloadIllusts(illusts, dldir, totalThread) {
  * @returns 下载目录名
  */
 async function getIllustratorNewDir(data) {
-	//下载目录
+	// 下载目录
 	const mainDir = config.path;
 	let dldir = null;
 
-	//先搜寻已有目录
+	// 先搜寻已有目录
 	Fse.ensureDirSync(mainDir);
 	const files = Fse.readdirSync(mainDir);
-	for (let file of files) {
+	for (const file of files) {
 		if (file.indexOf('(' + data.id + ')') === 0) {
 			dldir = file;
 			break;
 		}
 	}
 
-	//去除画师名常带的摊位后缀，以及非法字符
+	// 去除画师名常带的摊位后缀，以及非法字符
 	let iName = data.name;
-	let nameExtIndex = iName.search(/@|＠/);
+	const nameExtIndex = iName.search(/@|＠/);
 	if (nameExtIndex >= 1) iName = iName.substring(0, nameExtIndex);
-	iName = iName.replace(/[\/\\:*?"<>|.&\$]/g, '').replace(/[ ]+$/, '');
-	let dldirNew = '(' + data.id + ')' + iName;
+	iName = iName.replace(/[/\\:*?"<>|.&$]/g, '').replace(/[ ]+$/, '');
+	const dldirNew = '(' + data.id + ')' + iName;
 
-	//决定下载目录
+	// 决定下载目录
 	if (!dldir) {
 		dldir = dldirNew;
 	} else if (config.autoRename && dldir.toLowerCase() != dldirNew.toLowerCase()) {
@@ -294,7 +293,7 @@ async function getIllustratorNewDir(data) {
 async function downloadByIllusts(illustJSON) {
 	console.log();
 	let illusts = [];
-	for (let json of illustJSON) {
+	for (const json of illustJSON) {
 		illusts = illusts.concat(await Illust.getIllusts(json));
 	}
 	await downloadIllusts(illusts, Path.join(config.path, 'PID'), config.thread);

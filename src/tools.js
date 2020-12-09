@@ -33,10 +33,10 @@ async function download(dirpath, filename, url, axiosOption) {
 	const response = await Axios.create(axiosOption).get(global.cf ? url.replace('i.pximg.net', 'i-cf.pximg.net') : url.replace('i-cf.pximg.net', 'i.pximg.net'));
 	const data = response.data;
 
-	return new Promise((reslove, reject) => {
+	return new Promise((resolve, reject) => {
 		data.pipe(Fse.createWriteStream(Path.join(dirpath, filename)));
 		data.on('end', () => {
-			reslove(response);
+			resolve(response);
 		});
 		data.on('error', reject);
 	});

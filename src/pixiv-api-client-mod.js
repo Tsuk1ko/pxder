@@ -184,7 +184,7 @@ class PixivApi {
 
     // require auth
     userState() {
-        return this.requestUrl(`/v1/user/me/state`);
+        return this.requestUrl('/v1/user/me/state');
     }
 
     searchIllust(word, options) {
@@ -448,7 +448,7 @@ class PixivApi {
     }
 
     illustWalkthrough() {
-        return this.requestUrl(`/v1/walkthrough/illusts`);
+        return this.requestUrl('/v1/walkthrough/illusts');
     }
 
     illustComments(id, options) {
@@ -595,7 +595,7 @@ class PixivApi {
             },
             data,
         };
-        return this.requestUrl(`/v1/illust/comment/add`, options);
+        return this.requestUrl('/v1/illust/comment/add', options);
     }
 
     novelAddComment(id, comment, parentCommentId) {
@@ -617,7 +617,7 @@ class PixivApi {
             },
             data,
         };
-        return this.requestUrl(`/v1/novel/comment/add`, options);
+        return this.requestUrl('/v1/novel/comment/add', options);
     }
 
     trendingTagsIllust(options) {

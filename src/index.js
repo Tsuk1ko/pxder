@@ -151,12 +151,12 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	static async login(u, p) {
-		//登录
+		// 登录
 		const pixiv = new PixivApi();
 		await pixiv.login(u, p);
-		//获取refresh_token
+		// 获取refresh_token
 		const refresh_token = pixiv.authInfo().refresh_token;
-		//更新配置
+		// 更新配置
 		const conf = PixivFunc.readConfig();
 		conf.refresh_token = refresh_token;
 		PixivFunc.writeConfig(conf);
@@ -170,15 +170,15 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	async relogin() {
-		//检查配置
+		// 检查配置
 		const refresh_token = PixivFunc.readConfig().refresh_token;
 		if (!refresh_token) return false;
-		//刷新token
+		// 刷新token
 		this.pixiv = new PixivApi();
 		await this.pixiv.refreshAccessToken(refresh_token);
 		Illustrator.setPixiv(this.pixiv);
 		Illust.setPixiv(this.pixiv);
-		//定时刷新token
+		// 定时刷新token
 		const p = this.pixiv;
 		this.reloginInterval = setInterval(() => {
 			p.refreshAccessToken(refresh_token);
@@ -218,12 +218,12 @@ class PixivFunc {
 		const follows = [];
 		let next = this.followNextUrl;
 
-		//加入画师信息
+		// 加入画师信息
 		async function addToFollows(data) {
 			next = data.next_url;
 			for (const preview of data.user_previews) {
 				if (preview.user.id != 11) {
-					//除去“pixiv事務局”
+					// 除去“pixiv事務局”
 					const tmp = new Illustrator(preview.user.id, preview.user.name);
 					await tmp.setExampleIllusts(preview.illusts);
 					follows.push(tmp);
@@ -231,7 +231,7 @@ class PixivFunc {
 			}
 		}
 
-		//开始收集
+		// 开始收集
 		if (next) {
 			await this.pixiv.requestUrl(next).then(addToFollows);
 		} else
@@ -252,7 +252,7 @@ class PixivFunc {
 	 * @memberof PixivFunc
 	 */
 	hasNextMyFollow() {
-		return this.followNextUrl ? true : false;
+		return !!this.followNextUrl;
 	}
 
 	/**
@@ -311,12 +311,12 @@ class PixivFunc {
 		let follows = null;
 		let illustrators = null;
 
-		//临时文件
+		// 临时文件
 		const tmpJson = Path.join(configFileDir, (isPrivate ? 'private' : 'public') + '.json');
 		const tmpJsonExist = Fse.existsSync(tmpJson);
 		Fse.ensureDirSync(__config.download.path);
 
-		//取得关注列表
+		// 取得关注列表
 		if (!tmpJsonExist || force || (tmpJsonExist && !(follows = Tools.readJsonSafely(tmpJson, null)))) {
 			console.log('\nCollecting your follows');
 			follows = [];
@@ -333,7 +333,7 @@ class PixivFunc {
 			Fse.writeJSONSync(tmpJson, follows);
 		}
 
-		//数据恢复
+		// 数据恢复
 		if (!illustrators) {
 			illustrators = [];
 			for (const follow of follows) {
@@ -343,13 +343,13 @@ class PixivFunc {
 			}
 		}
 
-		//开始下载
+		// 开始下载
 		await Downloader.downloadByIllustrators(illustrators, () => {
 			follows.shift();
 			Fse.writeJSONSync(tmpJson, follows);
 		});
 
-		//清除临时文件
+		// 清除临时文件
 		Fse.unlinkSync(tmpJson);
 	}
 
@@ -360,14 +360,14 @@ class PixivFunc {
 	 */
 	async downloadUpdate() {
 		const uids = [];
-		//得到文件夹内所有UID
+		// 得到文件夹内所有UID
 		Fse.ensureDirSync(__config.download.path);
 		const files = Fse.readdirSync(__config.download.path);
 		for (const file of files) {
 			const search = /^\(([0-9]+)\)/.exec(file);
 			if (search) uids.push(search[1]);
 		}
-		//下载
+		// 下载
 		const illustrators = [];
 		uids.forEach(uid => illustrators.push(new Illustrator(uid)));
 		await Downloader.downloadByIllustrators(illustrators);

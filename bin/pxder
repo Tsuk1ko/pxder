@@ -57,14 +57,14 @@ const config = Pixiv.readConfig();
 
 handleArgv()
 	.then(async () => {
-		//检查配置
+		// 检查配置
 		if (!Pixiv.checkConfig(config)) {
 			console.log('\nRun ' + 'pxder -h'.yellow + ' for more usage information.\n');
 			process.exit();
 		}
 		Pixiv.applyConfig(config);
 
-		//检查更新
+		// 检查更新
 		const updater = new UpdateChecker();
 		const updateChecking = updater.check();
 		const logNewVersionAndExit = () => {
@@ -75,11 +75,11 @@ handleArgv()
 			process.exit();
 		};
 
-		//重登陆
+		// 重登陆
 		const pixiv = new Pixiv();
 		await pixiv.relogin();
 
-		//开始下载
+		// 开始下载
 		console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
 		if (config.directMode) console.log('Direct Mode:\t'.cyan + 'Enabled'.yellow);
 		else if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
@@ -91,7 +91,7 @@ handleArgv()
 		if (program.bookmarkPrivate) await pixiv.downloadBookmark(true);
 
 		if (program.uid) {
-			//得到UID
+			// 得到UID
 			let uids = program.uid;
 			if (typeof uids == 'string') {
 				uids = uids.split(',');
@@ -99,7 +99,7 @@ handleArgv()
 			} else help();
 		}
 		if (program.pid) {
-			//得到PID
+			// 得到PID
 			let pids = program.pid;
 			if (typeof pids == 'string') {
 				pids = pids.split(',');
@@ -138,15 +138,15 @@ async function handleArgv() {
 		process.exit();
 	}
 
-	//全局参数
+	// 全局参数
 	if (program.debug) global.p_debug = true;
 	global.ugoiraMeta = program.ugoiraMeta;
 	global.cf = program.cf;
 
-	//其他选项
+	// 其他选项
 	let pass = false;
 	if (program.login) {
-		//登录
+		// 登录
 		console.log('\nPixiv Login\n'.cyan);
 		const u = readline.question('Username: '.yellow);
 		const p = readline.question('Password: '.yellow, { hideEchoBack: true });
@@ -159,11 +159,11 @@ async function handleArgv() {
 			if (global.p_debug) console.error(error);
 		}
 	} else if (program.logout) {
-		//登出
+		// 登出
 		Pixiv.logout();
 		console.log('\nLogout success!\n'.green);
 	} else if (program.setting) {
-		//设置
+		// 设置
 		let index;
 		do {
 			console.clear();
@@ -184,7 +184,7 @@ async function handleArgv() {
 			console.log();
 
 			switch (index) {
-				case 0: //下载路径
+				case 0: // 下载路径
 					config.download.path = readline.questionPath('Please input a download path:\n'.yellow, {
 						isDirectory: true,
 						exists: null,
@@ -192,7 +192,7 @@ async function handleArgv() {
 					});
 					break;
 
-				case 1: //下载线程
+				case 1: // 下载线程
 					config.download.thread = getStrictIntInput(
 						'Please input the number of download thread:'.yellow + ' [1-32, default is 5]\n',
 						{
@@ -203,7 +203,7 @@ async function handleArgv() {
 					);
 					break;
 
-				case 2: //下载超时
+				case 2: // 下载超时
 					config.download.timeout = getStrictIntInput(
 						'Please input the seconds of download timeout:'.yellow + ' [default is 30]\n',
 						{
@@ -214,11 +214,11 @@ async function handleArgv() {
 					);
 					break;
 
-				case 3: //自动重命名
+				case 3: // 自动重命名
 					config.download.autoRename = !config.download.autoRename;
 					break;
 
-				case 4: //代理设置
+				case 4: // 代理设置
 					config.proxy = readline.question(
 						'Please input your HTTP/SOCKS proxy like:\n'.yellow +
 							'  <protocol>://[user:passwd@]<ip>:<port>\n' +
@@ -239,7 +239,7 @@ async function handleArgv() {
 				case 5:
 					config.directMode = !config.directMode;
 					break;
-			} //switch end
+			} // switch end
 
 			Pixiv.writeConfig(config);
 		} while (index !== -1);
