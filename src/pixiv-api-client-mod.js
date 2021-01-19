@@ -50,7 +50,7 @@ function callApi(url, options, retry = 2) {
     if (global.p_direct) {
         const fUrl = new URL(finalUrl);
         options.headers.Host = fUrl.host;
-        fUrl.host = HOSTS[fUrl.host];
+        fUrl.hostname = HOSTS[fUrl.hostname];
         finalUrl = fUrl.href;
     }
     return axios(finalUrl, options)
