@@ -5,6 +5,7 @@
 require('colors');
 const Path = require('path');
 const Pixiv = require('../src/index');
+const pixivLogin = require('../src/pixiv-login');
 const UpdateChecker = require('../src/updateChecker');
 const logError = require('../src/logError');
 const pkg = require('../package.json');
@@ -12,6 +13,7 @@ const { checkProxy, getSysProxy } = require('../src/proxy');
 
 const program = require('commander');
 const readline = require('readline-sync');
+const open = require('open');
 
 /*
  * Usage
@@ -20,35 +22,36 @@ const readline = require('readline-sync');
 const optionNewLine = '\n                        ';
 
 program
-	.usage('<options> [value]')
-	.option('--login', 'login Pixiv')
-	.option('--logout', 'logout Pixiv')
-	.option('')
-	.option('--setting', 'open options menu')
-	.option('')
-	.option('-p, --pid <pid(s)>', 'download illusts by PID, multiple PIDs separated by commas (,)')
-	.option('-u, --uid <uid(s)>', 'download / update illusts by UID, multiple UIDs separated by commas (,)')
-	.option('')
-	.option('-f, --follow', 'download / update illusts from your public follows')
-	.option('-F, --follow-private', 'download / update illusts from your private follows')
-	.option('    --force', 'ignore last progress')
-	.option('')
-	.option('-b, --bookmark', 'download / update illusts from your public bookmark')
-	.option('-B, --bookmark-private', 'download / update illusts from your private bookmark')
-	.option('')
-	.option('-U, --update', "update illustrators' illusts in your download path")
-	.option('')
-	.option('-M, --no-ugoira-meta', `will not request meta data for ugoira, it helps save time or${optionNewLine}avoid API rate limit error when downloading a tons of ugoiras`)
-	.option('')
-	.option('-O, --output-dir <dir>', 'Specify download directory')
-	.option('')
-	.option('    --no-cf', 'download illusts from i.pximg.net instead of i-cf.pximg.net')
-	.option('')
-	.option('    --debug', 'output all error messages while running')
-	.option('    --conf-loca', 'output the location of config and exit')
-	.option('')
-	.version(pkg.version, '-v, --version')
-	.parse(process.argv);
+  .usage('<options>')
+  .option('--login [token]', 'login Pixiv')
+  .option('--logout', 'logout Pixiv')
+  .option('')
+  .option('--setting', 'open options menu')
+  .option('')
+  .option('-p, --pid <pid(s)>', 'download illusts by PID, multiple PIDs separated by commas (,)')
+  .option('-u, --uid <uid(s)>', 'download / update illusts by UID, multiple UIDs separated by commas (,)')
+  .option('')
+  .option('-f, --follow', 'download / update illusts from your public follows')
+  .option('-F, --follow-private', 'download / update illusts from your private follows')
+  .option('    --force', 'ignore last progress')
+  .option('')
+  .option('-b, --bookmark', 'download / update illusts from your public bookmark')
+  .option('-B, --bookmark-private', 'download / update illusts from your private bookmark')
+  .option('')
+  .option('-U, --update', "update all illustrators' illusts in your download path")
+  .option('')
+  .option('-M, --no-ugoira-meta', `will not request meta data for ugoira, it helps save time or${optionNewLine}avoid API rate limit error when downloading a tons of ugoiras`)
+  .option('')
+  .option('-O, --output-dir <dir>', 'Specify download directory')
+  .option('')
+  .option('    --no-cf', 'download illusts from i.pximg.net instead of i-cf.pximg.net')
+  .option('')
+  .option('    --debug', 'output all error messages while running')
+  .option('    --conf-loca', 'output the location of config and exit')
+  .option('    --export-token', 'output current refresh token and exit')
+  .option('')
+  .version(pkg.version, '-v, --version')
+  .parse(process.argv);
 
 /*
  * Start
@@ -56,215 +59,236 @@ program
 const config = Pixiv.readConfig();
 
 handleArgv()
-	.then(async () => {
-		// 检查配置
-		if (!Pixiv.checkConfig(config)) {
-			console.log('\nRun ' + 'pxder -h'.yellow + ' for more usage information.\n');
-			process.exit();
-		}
-		Pixiv.applyConfig(config);
+  .then(async () => {
+    // 检查配置
+    if (!Pixiv.checkConfig(config)) {
+      console.log('\nRun ' + 'pxder -h'.yellow + ' for more usage information.\n');
+      process.exit();
+    }
 
-		// 检查更新
-		const updater = new UpdateChecker();
-		const updateChecking = updater.check();
-		const logNewVersionAndExit = () => {
-			if (updater.haveUpdate()) {
-				console.log(`New version ${updater.getLatestVersion().yellow} is available.`);
-				console.log(`You can upgrade via the '${'npm i -g pxder'.yellow}' command.\n`);
-			}
-			process.exit();
-		};
+    // 导出 refresh token
+    if (program.exportToken) {
+      console.log(config.refresh_token);
+      process.exit();
+    }
 
-		// 重登陆
-		const pixiv = new Pixiv();
-		await pixiv.relogin();
+    Pixiv.applyConfig(config);
 
-		// 开始下载
-		console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
-		if (config.directMode) console.log('Direct Mode:\t'.cyan + 'Enabled'.yellow);
-		else if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
+    // 检查更新
+    const updater = new UpdateChecker();
+    const updateChecking = updater.check();
+    const logNewVersionAndExit = () => {
+      if (updater.haveUpdate()) {
+        console.log(`New version ${updater.getLatestVersion().yellow} is available.`);
+        console.log(`You can upgrade via the '${'npm i -g pxder'.yellow}' command.\n`);
+      }
+      process.exit();
+    };
 
-		if (program.follow) await pixiv.downloadFollowAll(false, program.force);
-		if (program.followPrivate) await pixiv.downloadFollowAll(true, program.force);
-		if (program.update) await pixiv.downloadUpdate();
-		if (program.bookmark) await pixiv.downloadBookmark();
-		if (program.bookmarkPrivate) await pixiv.downloadBookmark(true);
+    // 重登陆
+    const pixiv = new Pixiv();
+    await pixiv.relogin();
 
-		if (program.uid) {
-			// 得到UID
-			let uids = program.uid;
-			if (typeof uids == 'string') {
-				uids = uids.split(',');
-				await pixiv.downloadByUIDs(uids);
-			} else help();
-		}
-		if (program.pid) {
-			// 得到PID
-			let pids = program.pid;
-			if (typeof pids == 'string') {
-				pids = pids.split(',');
-				await pixiv.downloadByPIDs(pids);
-			} else help();
-		}
+    // 开始下载
+    console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
+    if (config.directMode) console.log('Direct Mode:\t'.cyan + 'Enabled'.yellow);
+    else if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
 
-		if (!(program.follow || program.followPrivate || program.update || program.bookmark || program.bookmarkPrivate || program.uid || program.pid)) help();
+    if (program.follow) await pixiv.downloadFollowAll(false, program.force);
+    if (program.followPrivate) await pixiv.downloadFollowAll(true, program.force);
+    if (program.update) await pixiv.downloadUpdate();
+    if (program.bookmark) await pixiv.downloadBookmark();
+    if (program.bookmarkPrivate) await pixiv.downloadBookmark(true);
 
-		pixiv.clearReloginInterval();
-		console.log();
+    if (program.uid) {
+      // 得到UID
+      let uids = program.uid;
+      if (typeof uids == 'string') {
+        uids = uids.split(',');
+        await pixiv.downloadByUIDs(uids);
+      } else help();
+    }
+    if (program.pid) {
+      // 得到PID
+      let pids = program.pid;
+      if (typeof pids == 'string') {
+        pids = pids.split(',');
+        await pixiv.downloadByPIDs(pids);
+      } else help();
+    }
 
-		if (updater.recentlyChecked()) logNewVersionAndExit();
-		else {
-			updateChecking.then(logNewVersionAndExit);
-			setTimeout(logNewVersionAndExit, 3000);
-		}
-	})
-	.catch(e => {
-		if (global.p_debug) logError(e);
-		else {
-			let errMsg;
-			if ((errMsg = e.errors && e.errors.system && e.errors.system.message)) {
-				console.error(`\n${'ERROR:'.red} ${errMsg}\n`);
-				if (errMsg === 'Invalid refresh token') {
-					console.log('Maybe CLIENT_ID and CLIENT_SECRET are updated, please try to relogin.\n'.yellow);
-				}
-			} else logError(e);
-		}
-		process.exit();
-	});
+    if (!(program.follow || program.followPrivate || program.update || program.bookmark || program.bookmarkPrivate || program.uid || program.pid)) help();
+
+    pixiv.clearReloginInterval();
+    console.log();
+
+    if (updater.recentlyChecked()) logNewVersionAndExit();
+    else {
+      updateChecking.then(logNewVersionAndExit);
+      setTimeout(logNewVersionAndExit, 3000);
+    }
+  })
+  .catch(e => {
+    if (global.p_debug) logError(e);
+    else {
+      let errMsg;
+      if ((errMsg = e.errors && e.errors.system && e.errors.system.message)) {
+        console.error(`\n${'ERROR:'.red} ${errMsg}\n`);
+        if (errMsg === 'Invalid refresh token') {
+          console.log('Maybe CLIENT_ID and CLIENT_SECRET are updated, please try to relogin.\n'.yellow);
+        }
+      } else logError(e);
+    }
+    process.exit();
+  });
 
 async function handleArgv() {
-	if (program.confLoca) {
-		console.log(require('appdata-path').getAppDataPath('pxder'));
-		process.exit();
-	}
+  if (program.confLoca) {
+    console.log(require('appdata-path').getAppDataPath('pxder'));
+    process.exit();
+  }
 
-	// 全局参数
-	if (program.debug) global.p_debug = true;
-	global.ugoiraMeta = program.ugoiraMeta;
-	global.cf = program.cf;
+  // 全局参数
+  if (program.debug) global.p_debug = true;
+  global.ugoiraMeta = program.ugoiraMeta;
+  global.cf = program.cf;
 
-	// 其他选项
-	let pass = false;
-	if (program.login) {
-		// 登录
-		console.log('\nPixiv Login\n'.cyan);
-		const u = readline.question('Username: '.yellow);
-		const p = readline.question('Password: '.yellow, { hideEchoBack: true });
-		try {
-			Pixiv.applyProxyConfig(config);
-			await Pixiv.login(u, p);
-			console.log('\nLogin success!\n'.green);
-		} catch (error) {
-			console.log('\nLogin fail!'.red, 'Please check your input or proxy setting.\n');
-			if (global.p_debug) console.error(error);
-		}
-	} else if (program.logout) {
-		// 登出
-		Pixiv.logout();
-		console.log('\nLogout success!\n'.green);
-	} else if (program.setting) {
-		// 设置
-		let index;
-		do {
-			console.clear();
-			console.log('Pxder Options'.green);
-			const sysProxy = getSysProxy();
-			const options = [
-				'Download path\t'.yellow + (config.download.path ? config.download.path : 'Null, please set one'.bgRed),
-				'Download thread\t'.yellow + config.download.thread,
-				'Download timeout\t'.yellow + config.download.timeout,
-				'Auto rename\t\t'.yellow + (config.download.autoRename ? 'Enabled' : 'Disabled'),
-				'Proxy\t\t'.yellow +
-					(checkProxy(config.proxy) && config.proxy ? (config.proxy === 'disable' ? 'Disabled' : config.proxy) : checkProxy(sysProxy) && sysProxy ? `[env] ${sysProxy}` : 'None'),
-				'Direct mode\t\t'.yellow + (config.directMode ? 'Enabled' : 'Disabled'),
-			];
-			index = readline.keyInSelect(options, 'Press a key:', {
-				cancel: 'Exit'.bgMagenta,
-			});
-			console.log();
+  // 其他选项
+  let pass = false;
+  if (program.login) {
+    // 登录
+    console.log('\nPixiv Login\n'.cyan);
+    try {
+      Pixiv.applyProxyConfig(config);
+      if (typeof program.login === 'string') {
+        const token = program.login.trim();
+        console.log('Login with refresh token', token.yellow);
+        await Pixiv.loginByToken(token);
+      } else {
+        console.log('Before login, please read this first ->', 'https://git.io/Jt6Lj'.cyan);
+        if (!readline.keyInYN('Continue?')) process.exit();
+        const { login_url, code_verifier } = pixivLogin();
+        console.log('\nLogin URL:', login_url.cyan);
+        open(login_url);
+        const code = (() => {
+          while (true) {
+            const input = readline.question('Code: '.yellow);
+            if (input) return input;
+          }
+        })();
+        await Pixiv.login(code, code_verifier);
+      }
+      console.log('\nLogin success!\n'.green);
+    } catch (error) {
+      console.log('\nLogin fail!'.red, 'Please check your input or proxy setting.\n');
+      if (global.p_debug) console.error(error);
+    }
+  } else if (program.logout) {
+    // 登出
+    Pixiv.logout();
+    console.log('\nLogout success!\n'.green);
+  } else if (program.setting) {
+    // 设置
+    let index;
+    do {
+      console.clear();
+      console.log('Pxder Options'.green);
+      const sysProxy = getSysProxy();
+      const options = [
+        'Download path\t'.yellow + (config.download.path ? config.download.path : 'Null, please set one'.bgRed),
+        'Download thread\t'.yellow + config.download.thread,
+        'Download timeout\t'.yellow + config.download.timeout,
+        'Auto rename\t\t'.yellow + (config.download.autoRename ? 'Enabled' : 'Disabled'),
+        'Proxy\t\t'.yellow + (checkProxy(config.proxy) && config.proxy ? (config.proxy === 'disable' ? 'Disabled' : config.proxy) : checkProxy(sysProxy) && sysProxy ? `[env] ${sysProxy}` : 'None'),
+        'Direct mode\t\t'.yellow + (config.directMode ? 'Enabled' : 'Disabled'),
+      ];
+      index = readline.keyInSelect(options, 'Press a key:', {
+        cancel: 'Exit'.bgMagenta,
+      });
+      console.log();
 
-			switch (index) {
-				case 0: // 下载路径
-					config.download.path = readline.questionPath('Please input a download path:\n'.yellow, {
-						isDirectory: true,
-						exists: null,
-						cd: false,
-					});
-					break;
+      switch (index) {
+        case 0: // 下载路径
+          config.download.path = readline.questionPath('Please input a download path:\n'.yellow, {
+            isDirectory: true,
+            exists: null,
+            cd: false,
+          });
+          break;
 
-				case 1: // 下载线程
-					config.download.thread = getStrictIntInput(
-						'Please input the number of download thread:'.yellow + ' [1-32, default is 5]\n',
-						{
-							defaultInput: 5,
-						},
-						input => input >= 1 && input <= 32,
-						'It must be between 1 and 32.'
-					);
-					break;
+        case 1: // 下载线程
+          config.download.thread = getStrictIntInput(
+            'Please input the number of download thread:'.yellow + ' [1-32, default is 5]\n',
+            {
+              defaultInput: 5,
+            },
+            input => input >= 1 && input <= 32,
+            'It must be between 1 and 32.'
+          );
+          break;
 
-				case 2: // 下载超时
-					config.download.timeout = getStrictIntInput(
-						'Please input the seconds of download timeout:'.yellow + ' [default is 30]\n',
-						{
-							defaultInput: 30,
-						},
-						input => input > 0,
-						'It must be greater than 0.'
-					);
-					break;
+        case 2: // 下载超时
+          config.download.timeout = getStrictIntInput(
+            'Please input the seconds of download timeout:'.yellow + ' [default is 30]\n',
+            {
+              defaultInput: 30,
+            },
+            input => input > 0,
+            'It must be greater than 0.'
+          );
+          break;
 
-				case 3: // 自动重命名
-					config.download.autoRename = !config.download.autoRename;
-					break;
+        case 3: // 自动重命名
+          config.download.autoRename = !config.download.autoRename;
+          break;
 
-				case 4: // 代理设置
-					config.proxy = readline.question(
-						'Please input your HTTP/SOCKS proxy like:\n'.yellow +
-							'  <protocol>://[user:passwd@]<ip>:<port>\n' +
-							'  <protocol> can be http(s) / socks(4|4a|5|5h)\n' +
-							'Example\n'.yellow +
-							'  http://user:passwd@127.0.0.1:1080\n' +
-							'  socks://127.0.0.1:1080\n' +
-							'If you input nothing, pxder will load proxy from environment variables if avaliable.\n'.yellow +
-							'If you want to fully DISABLE it, please input '.yellow +
-							'disable'.red +
-							'.\n'.yellow,
-						{
-							limitMessage: '\nIncorrect format, please re-input.\n'.bgRed,
-							limit: checkProxy,
-						}
-					);
-					break;
-				case 5:
-					config.directMode = !config.directMode;
-					break;
-			} // switch end
+        case 4: // 代理设置
+          config.proxy = readline.question(
+            'Please input your HTTP/SOCKS proxy like:\n'.yellow +
+              '  <protocol>://[user:passwd@]<ip>:<port>\n' +
+              '  <protocol> can be http(s) / socks(4|4a|5|5h)\n' +
+              'Example\n'.yellow +
+              '  http://user:passwd@127.0.0.1:1080\n' +
+              '  socks://127.0.0.1:1080\n' +
+              'If you input nothing, pxder will load proxy from environment variables if avaliable.\n'.yellow +
+              'If you want to fully DISABLE it, please input '.yellow +
+              'disable'.red +
+              '.\n'.yellow,
+            {
+              limitMessage: '\nIncorrect format, please re-input.\n'.bgRed,
+              limit: checkProxy,
+            }
+          );
+          break;
+        case 5:
+          config.directMode = !config.directMode;
+          break;
+      } // switch end
 
-			Pixiv.writeConfig(config);
-		} while (index !== -1);
+      Pixiv.writeConfig(config);
+    } while (index !== -1);
 
-		console.log('Exit'.green);
-	} else {
-		pass = true;
-	}
-	if (!pass) process.exit();
+    console.log('Exit'.green);
+  } else {
+    pass = true;
+  }
+  if (!pass) process.exit();
 
-	if (program.outputDir) {
-		config.download.path = Path.resolve(program.outputDir);
-	}
+  if (program.outputDir) {
+    config.download.path = Path.resolve(program.outputDir);
+  }
 }
 
 function getStrictIntInput(question, option, limit, limitReply) {
-	let result = readline.questionInt(question, option);
-	while (!limit(result)) {
-		console.log('\n' + limitReply.bgRed + '\n');
-		result = readline.questionInt(question, option);
-	}
-	return result;
+  let result = readline.questionInt(question, option);
+  while (!limit(result)) {
+    console.log('\n' + limitReply.bgRed + '\n');
+    result = readline.questionInt(question, option);
+  }
+  return result;
 }
 
 function help() {
-	console.error('\nMissing arguments!'.bgRed);
-	program.outputHelp();
+  console.error('\nMissing arguments!'.bgRed);
+  program.outputHelp();
 }
