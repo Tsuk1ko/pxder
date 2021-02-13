@@ -6,7 +6,7 @@ const Illustrator = require('./illustrator');
 const Fse = require('fs-extra');
 const Path = require('path');
 const Tools = require('./tools');
-const { getProxyAgent, getSysProxy } = require('./proxy');
+const { getProxyAgent, getSysProxy, delSysProxy } = require('./proxy');
 const { Agent } = require('https');
 
 const configFileDir = require('appdata-path').getAppDataPath('pxder');
@@ -123,17 +123,14 @@ class PixivFunc {
           servername: '',
         })
       );
+      delSysProxy();
     } else {
       const proxy = config.proxy;
       const sysProxy = getSysProxy();
       // if config has no proxy and env has, use it
       const agent = proxy === 'disable' ? null : getProxyAgent(proxy) || getProxyAgent(sysProxy);
       // fix OAuth may fail if env has set the http proxy
-      if (sysProxy) {
-        delete process.env.all_proxy;
-        delete process.env.http_proxy;
-        delete process.env.https_proxy;
-      }
+      if (sysProxy) delSysProxy();
       if (agent) {
         Downloader.setAgent(agent);
         PixivApi.setAgent(agent);
@@ -154,7 +151,7 @@ class PixivFunc {
     // 登录
     const pixiv = new PixivApi();
     await pixiv.tokenRequest(code, code_verifier);
-    // 获取refresh_token
+    // 获取 refresh_token
     const refresh_token = pixiv.authInfo().refresh_token;
     // 更新配置
     const conf = PixivFunc.readConfig();
@@ -190,12 +187,12 @@ class PixivFunc {
     // 检查配置
     const refresh_token = PixivFunc.readConfig().refresh_token;
     if (!refresh_token) return false;
-    // 刷新token
+    // 刷新 token
     this.pixiv = new PixivApi();
     await this.pixiv.refreshAccessToken(refresh_token);
     Illustrator.setPixiv(this.pixiv);
     Illust.setPixiv(this.pixiv);
-    // 定时刷新token
+    // 定时刷新 token
     const p = this.pixiv;
     this.reloginInterval = setInterval(() => {
       p.refreshAccessToken(refresh_token);

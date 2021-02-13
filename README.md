@@ -118,7 +118,7 @@ pxder --setting
   - `http://user:passwd@127.0.0.1:1080`
   - `socks://127.0.0.1:1080`（如果你使用小飞机则直接填这个，除非你改过本地端口）
   
-  如果输入空行则会尝试从环境变量中依次读取 `all_proxy` `https_proxy` `https_proxy`  
+  如果输入空行则会尝试从环境变量中依次读取 `all_proxy` `https_proxy` `http_proxy`（也包含全大写的环境变量）  
   如果想完全禁止使用代理，请输入 `disable`
 - **直连模式**  
   利用域前置（Domain Fronting）绕过 SNI 审查，达到直连使用的目的  
