@@ -10,6 +10,8 @@ const UpdateChecker = require('../src/updateChecker');
 const logError = require('../src/logError');
 const pkg = require('../package.json');
 const { checkProxy, getSysProxy } = require('../src/proxy');
+const LoginProtocol = require('../src/protocol');
+const receiveLoginCode = require('../src/protocol/receiver');
 
 const program = require('commander');
 const readline = require('readline-sync');
@@ -23,10 +25,11 @@ const optionNewLine = '\n                        ';
 
 program
   .usage('<options>')
-  .option('--login [token]', 'login Pixiv')
-  .option('--logout', 'logout Pixiv')
+  .option('    --login [token]', 'login Pixiv')
+  .option('    --logout', 'logout Pixiv')
+  .option('    --no-protocol', 'use with --login to block pixiv:// registration on Windows')
   .option('')
-  .option('--setting', 'open options menu')
+  .option('    --setting', 'open options menu')
   .option('')
   .option('-p, --pid <pid(s)>', 'download illusts by PID, multiple PIDs separated by commas (,)')
   .option('-u, --uid <uid(s)>', 'download / update illusts by UID, multiple UIDs separated by commas (,)')
@@ -40,11 +43,10 @@ program
   .option('')
   .option('-U, --update', "update all illustrators' illusts in your download path")
   .option('')
+  .option('    --no-cf', 'download illusts from i.pximg.net instead of i-cf.pximg.net')
   .option('-M, --no-ugoira-meta', `will not request meta data for ugoira, it helps save time or${optionNewLine}avoid API rate limit error when downloading a tons of ugoiras`)
   .option('')
   .option('-O, --output-dir <dir>', 'Specify download directory')
-  .option('')
-  .option('    --no-cf', 'download illusts from i.pximg.net instead of i-cf.pximg.net')
   .option('')
   .option('    --debug', 'output all error messages while running')
   .option('    --conf-loca', 'output the location of config and exit')
@@ -153,6 +155,11 @@ async function handleArgv() {
   global.ugoiraMeta = program.ugoiraMeta;
   global.cf = program.cf;
 
+  // 清理 protocol
+  if (process.platform === 'win32' && (await LoginProtocol.exists())) {
+    await LoginProtocol.uninstall();
+  }
+
   // 其他选项
   let pass = false;
   if (program.login) {
@@ -161,21 +168,32 @@ async function handleArgv() {
     try {
       Pixiv.applyProxyConfig(config);
       if (typeof program.login === 'string') {
+        // token 登录
         const token = program.login.trim();
         console.log('Login with refresh token', token.yellow);
         await Pixiv.loginByToken(token);
       } else {
-        console.log('Before login, please read this first ->', 'https://git.io/Jt6Lj'.cyan);
-        if (!readline.keyInYN('Continue?')) process.exit();
+        // OAuth 登录
         const { login_url, code_verifier } = pixivLogin();
-        console.log('\nLogin URL:', login_url.cyan);
-        open(login_url);
-        const code = (() => {
-          while (true) {
-            const input = readline.question('Code: '.yellow);
-            if (input) return input;
-          }
-        })();
+        let code;
+        if (process.platform === 'win32' && program.protocol && (await LoginProtocol.canInstall()) && (await LoginProtocol.install())) {
+          console.log('Login URL:', login_url.cyan);
+          console.log('Waiting login... More details:', 'https://git.io/Jt6Lj'.cyan);
+          open(login_url);
+          code = await receiveLoginCode();
+          await LoginProtocol.uninstall();
+        } else {
+          console.log('Before login, please read this first ->', 'https://git.io/Jt6Lj'.cyan);
+          if (!readline.keyInYN('Continue?')) process.exit();
+          console.log('\nLogin URL:', login_url.cyan);
+          open(login_url);
+          code = (() => {
+            while (true) {
+              const input = readline.question('Code: '.yellow);
+              if (input) return input;
+            }
+          })();
+        }
         await Pixiv.login(code, code_verifier);
       }
       console.log('\nLogin success!\n'.green);

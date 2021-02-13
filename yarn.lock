@@ -1322,6 +1322,13 @@ regexpp@^3.0.0, regexpp@^3.1.0:
   resolved "https://registry.yarnpkg.com/regexpp/-/regexpp-3.1.0.tgz#206d0ad0a5648cffbdb8ae46438f3dc51c9f78e2"
   integrity sha512-ZOIzd8yVsQQA7j8GCSlPGXwg5PfmA1mrq0JP4nGhh54LaKN3xdai/vHUDu74pKwV8OxseMS65u2NImosQcSD0Q==
 
+register-protocol-win32@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/register-protocol-win32/-/register-protocol-win32-1.1.0.tgz#ac961c69caaa2d609eec368aa0e4daf81a2dfee3"
+  integrity sha1-rJYcacqqLWCe7DaKoOTa+Bot/uM=
+  dependencies:
+    winreg "^1.1.1"
+
 registry-auth-token@^4.0.0:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/registry-auth-token/-/registry-auth-token-4.1.1.tgz#40a33be1e82539460f94328b0f7f0f84c16d9479"
@@ -1605,6 +1612,11 @@ which@^2.0.1:
   integrity sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==
   dependencies:
     isexe "^2.0.0"
+
+winreg@^1.1.1:
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/winreg/-/winreg-1.2.4.tgz#ba065629b7a925130e15779108cf540990e98d1b"
+  integrity sha1-ugZWKbepJRMOFXeRCM9UCZDpjRs=
 
 word-wrap@^1.2.3:
   version "1.2.3"
