@@ -1,8 +1,8 @@
-const _ = require('lodash');
+const flatMap = require('lodash.flatmap');
 const SocksProxyAgent = require('socks-proxy-agent');
 const HttpsProxyAgent = require('https-proxy-agent');
 
-const envNames = _.flatMap(['all_proxy', 'https_proxy', 'http_proxy'], name => [name, name.toUpperCase()]);
+const envNames = flatMap(['all_proxy', 'https_proxy', 'http_proxy'], name => [name, name.toUpperCase()]);
 
 function checkProxy(proxy) {
   return (

@@ -1,6 +1,6 @@
 {
   "name": "pxder",
-  "version": "2.12.1",
+  "version": "2.12.2",
   "description": "Download illusts from pixiv.net P站插画批量下载器",
   "main": "index.js",
   "dependencies": {
@@ -13,6 +13,7 @@
     "https-proxy-agent": "^5.0.0",
     "js-base64": "^3.6.0",
     "latest-version": "^5.1.0",
+    "lodash.flatmap": "^4.5.0",
     "open": "^7.4.0",
     "pixiv-api-client": "^0.25.0",
     "readline-sync": "^1.4.10",
