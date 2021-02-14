@@ -9,8 +9,8 @@ const Tools = require('./tools');
 const { getProxyAgent, getSysProxy, delSysProxy } = require('./proxy');
 const { Agent } = require('https');
 
-const configFileDir = require('appdata-path').getAppDataPath('pxder');
-const configFile = Path.join(configFileDir, 'config.json');
+const CONFIG_FILE_DIR = require('appdata-path').getAppDataPath('pxder');
+const CONFIG_FILE = Path.resolve(CONFIG_FILE_DIR, 'config.json');
 
 const defaultConfig = {
   download: {
@@ -35,8 +35,8 @@ class PixivFunc {
    * @memberof PixivFunc
    */
   static initConfig(forceInit = false) {
-    Fse.ensureDirSync(configFileDir);
-    if (!Fse.existsSync(configFile) || forceInit) Fse.writeJSONSync(configFile, defaultConfig);
+    Fse.ensureDirSync(CONFIG_FILE_DIR);
+    if (!Fse.existsSync(CONFIG_FILE) || forceInit) Fse.writeJSONSync(CONFIG_FILE, defaultConfig);
   }
 
   /**
@@ -50,7 +50,7 @@ class PixivFunc {
     PixivFunc.initConfig();
     const config = (() => {
       try {
-        return Fse.readJsonSync(configFile);
+        return Fse.readJsonSync(CONFIG_FILE);
       } catch (error) {}
       return defaultConfig;
     })();
@@ -69,7 +69,8 @@ class PixivFunc {
    * @memberof PixivFunc
    */
   static writeConfig(config) {
-    Fse.writeJsonSync(configFile, config);
+    Fse.ensureDirSync(CONFIG_FILE_DIR);
+    Fse.writeJsonSync(CONFIG_FILE, config);
   }
 
   /**
@@ -102,7 +103,7 @@ class PixivFunc {
    */
   static applyConfig(config = PixivFunc.readConfig()) {
     __config = config;
-    config.download.tmp = Path.join(configFileDir, 'tmp');
+    config.download.tmp = Path.join(CONFIG_FILE_DIR, 'tmp');
     Downloader.setConfig(config.download);
     PixivFunc.applyProxyConfig(config);
   }
@@ -326,7 +327,7 @@ class PixivFunc {
     let illustrators = null;
 
     // 临时文件
-    const tmpJson = Path.join(configFileDir, (isPrivate ? 'private' : 'public') + '.json');
+    const tmpJson = Path.join(CONFIG_FILE_DIR, (isPrivate ? 'private' : 'public') + '.json');
     const tmpJsonExist = Fse.existsSync(tmpJson);
     Fse.ensureDirSync(__config.download.path);
 
@@ -344,6 +345,7 @@ class PixivFunc {
           })
         );
       });
+      Fse.ensureDirSync(CONFIG_FILE_DIR);
       Fse.writeJSONSync(tmpJson, follows);
     }
 
@@ -360,6 +362,7 @@ class PixivFunc {
     // 开始下载
     await Downloader.downloadByIllustrators(illustrators, () => {
       follows.shift();
+      Fse.ensureDirSync(CONFIG_FILE_DIR);
       Fse.writeJSONSync(tmpJson, follows);
     });
 
