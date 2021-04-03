@@ -84,12 +84,12 @@ class PixivFunc {
   static checkConfig(config = PixivFunc.readConfig()) {
     let check = true;
     if (!config.refresh_token) {
-      console.error('\nYou must login first!'.red + '\n    Try ' + 'pxder --login'.yellow);
+      console.error('\nYou must login first!'.red + '\n  Try ' + 'pxder --login'.yellow);
       check = false;
     }
     if (!config.download.path) {
       check = false;
-      console.error('\nYou must set download path first!'.red + '\n    Try ' + 'pxder --setting'.yellow);
+      console.error('\nYou must set download path first!'.red + '\n  Try ' + 'pxder --setting'.yellow);
     }
     return check;
   }

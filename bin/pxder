@@ -15,6 +15,7 @@ const receiveLoginCode = require('../src/protocol/receiver');
 
 const program = require('commander');
 const readline = require('readline-sync');
+const prompts = require('prompts');
 const open = require('open');
 
 /*
@@ -227,11 +228,17 @@ async function handleArgv() {
 
       switch (index) {
         case 0: // 下载路径
-          config.download.path = readline.questionPath('Please input a download path:\n'.yellow, {
-            isDirectory: true,
-            exists: null,
-            cd: false,
-          });
+          const initial = config.download.path || '';
+          config.download.path =
+            (
+              await prompts({
+                type: 'text',
+                name: 'value',
+                message: 'Please input a download path'.yellow,
+                format: v => Path.resolve(v.trim()),
+                initial,
+              })
+            ).value || initial;
           break;
 
         case 1: // 下载线程
