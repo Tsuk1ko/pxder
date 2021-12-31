@@ -1,0 +1,434 @@
+#!/usr/bin/env node
+
+'use strict'
+
+require('colors')
+const Pixiv = require('../src/pxrepo')
+const pixivLogin = require('../src/pixiv-login')
+const PixivApi = require('../src/pixiv-api-client-mod')
+const Illustrator = require('../src/illustrator')
+const utils = require('../src/plugins/utils')
+const pkg = require('../package.json')
+const Fse = require('fs-extra')
+const Fs = require('fs')
+const program = require('commander')
+const readlinesync = require('readline-sync')
+const Path = require('path')
+
+const {
+    checkProxy,
+    getSysProxy
+} = require('../src/proxy')
+
+const UpdateChecker = require('../src/updateChecker')
+
+const LoginProtocol = require('../src/protocol')
+const receiveLoginCode = require('../src/protocol/receiver')
+
+const prompts = require('prompts')
+const open = require('open')
+
+global.pxrepodir = Path.resolve(__dirname, '..') //pxrepo根目录
+global.inComplete = Path.join(global.pxrepodir, 'inComplete') //下载路径
+global.configFileDir = Path.join(global.pxrepodir, 'config') //设置路径
+
+
+global.downJson = Path.join(global.configFileDir, 'download.json') //下载任务
+global.blacklistJson = Path.join(global.configFileDir, 'blacklist.json') //黑名单
+global.historyJson = Path.join(global.configFileDir, 'history.json') //历史下载
+global.configFile = Path.join(global.configFileDir, 'config.json')
+global.config
+global.download
+global.agent
+global.bookMark = Path.join(global.configFileDir, 'bookMark.json')
+global.blacklist = []
+global.pixiv = new PixivApi()
+
+/*
+ * Usage
+ */
+
+
+program
+    .usage('<options> [value]')
+    .option(' --login [token]', '登录 Pixiv')
+    .option(' --logout', '登出 Pixiv')
+    .option(' --no-protocol')
+    .option('')
+    .option('--setting', '打开设置')
+    .option('')
+    .option('-p, --pid <pid(s)>', '通过插图PID下载插图, 逗号(,)分割')
+    .option('-u, --uid <uid(s)>', '通过画师UID下载插图,逗号(,)分割')
+    .option('')
+    .option('-G, --get [isPublic]', '获取关注 false为私有，默认为true，参数非fales均为true。')
+    .option('')
+    .option('-B, --bookmark [isPublic]', '下载收藏')
+    .option('')
+    .option('-U, --update [Json]', "下载插图，也可以对所有画师插图更新下载")
+    .option('-D, --delete', '清除未完成下载的文件')
+    .option('-l, --blacklist <uid(s)>', '添加到黑名单，可以跳过该画师的下载')
+    .option('')
+    .option('-M, --no-ugoira-meta', '将不会为ugoira请求元数据，这有助于节省时间或避免API速率限制错误')
+    .option('')
+    .option('-d, --divide [Json]', '拆分json文件')
+    .option('')
+    .option('    --no-cf', '从i.pximg.net下载插图，而不是i-cf.pximg.net')
+    .option('')
+    .version(pkg.version, '-v, --version')
+    .parse(process.argv)
+    /*
+     * Start
+     */
+const config = Pixiv.readConfig()
+
+handleArgv()
+    .then(async() => {
+
+
+        //检查配置
+        if (!Pixiv.checkConfig(config)) {
+            console.log('\nRun ' + 'pxrepo -h'.yellow + ' for more usage information.\n')
+            process.exit()
+        }
+        Pixiv.applyConfig(config)
+
+
+
+
+        //检查更新
+        const updater = new UpdateChecker()
+        const updateChecking = updater.check()
+        const logNewVersionAndExit = () => {
+            if (updater.haveUpdate()) {
+                console.log(`New version ${updater.getLatestVersion().yellow} is available.`)
+                console.log(`You can upgrade via the '${'npm i -g pixivrepositories'.yellow}' command.\n`)
+            }
+            process.exit()
+        }
+
+        //重登陆
+        const pixiv = new Pixiv()
+        await pixiv.relogin()
+
+
+
+        //开始下载
+        console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow)
+        if (config.directMode) console.log('Direct Mode:\t'.cyan + 'Enabled'.yellow)
+        else if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow)
+
+        global.cf = program.cf
+        if (program.get) {
+            let isPublic = program.get
+                //console.log(isPublic)
+            if (typeof isPublic == 'string')
+                if (isPublic === 'false') isPublic = false
+            isPublic = Boolean(isPublic)
+            console.log(isPublic)
+            await pixiv.getAllMyFollow(isPublic)
+
+        }
+
+        if (program.update) {
+            let Json = program.update
+            console.log(Json)
+            if (typeof Json == 'string') {
+                switch (Json) {
+                    case 'downJson':
+                        await pixiv.downloadUpdate(global.downJson)
+                        break
+                    case 'historyJson':
+                        await pixiv.downloadUpdate(global.historyJson)
+                        break
+                    case 'blacklistJson':
+                        utils.showExists(global.blacklistJson)
+                        break
+                    default:
+                        if (Fs.existsSync(Json))
+                            await pixiv.downloadUpdate(Json)
+                }
+            } else await pixiv.downloadUpdate(global.downJson)
+
+        }
+        if (program.divide) {
+            let Json = program.divide
+            console.log(Json)
+            if (typeof Json == 'string') {
+                switch (Json) {
+                    case 'downJson':
+                        await utils.divideJson(global.downJson, 1000)
+                        break
+                    case 'historyJson':
+                        await utils.divideJson(global.historyJson, 1000)
+                        break
+                    case 'blacklistJson':
+                        utils.showExists(global.blacklistJson)
+                        break
+                    default:
+                        if (Fs.existsSync(Json))
+                            await utils.divideJson(Json, 1000)
+                }
+            } else await utils.divideJson(global.downJson, 1000)
+
+        }
+        /////////////////////////
+        if (program.bookmark) {
+            let isPublic = program.bookmark
+                //console.log(isPublic)
+            if (typeof isPublic == 'string')
+                if (isPublic === 'false') isPublic = false
+            isPublic = Boolean(isPublic)
+            console.log(isPublic)
+            await pixiv.downloadBookmark(isPublic)
+
+        }
+
+        if (program.uid) {
+            //得到UID
+            let uids = program.uid
+            if (typeof uids == 'string') {
+                uids = uids.split(',')
+                await pixiv.downloadByUIDs(uids)
+            } else help()
+        }
+        if (program.pid) {
+            //得到PID
+            let pids = program.pid
+            if (typeof pids == 'string') {
+                pids = pids.split(',')
+                console.log(pids)
+                await pixiv.downloadByPIDs(pids)
+            } else help()
+        }
+
+        if (!(program.get || program.update || program.bookmark || program.uid || program.pid || program.divide))
+            help()
+
+        pixiv.clearReloginInterval()
+        console.log()
+
+    })
+    .catch(e => {
+        console.error(e)
+
+        process.exit()
+    })
+
+async function handleArgv() {
+    //全局参数
+    global.ugoiraMeta = program.ugoiraMeta
+    global.cf = program.cf
+
+    // 清理 protocol
+    if (process.platform === 'win32' && (await LoginProtocol.exists())) {
+        await LoginProtocol.uninstall()
+    }
+    //其他选项
+    let pass = false
+    if (program.login) {
+        // 登录
+        console.log('\nPixiv Login\n'.cyan)
+        try {
+            Pixiv.applyProxyConfig(config)
+            if (typeof program.login === 'string') {
+                // token 登录
+                const token = program.login.trim()
+                console.log('Login with refresh token', token.yellow)
+                await Pixiv.loginByToken(token)
+            } else {
+                // OAuth 登录
+                const {
+                    login_url,
+                    code_verifier
+                } = pixivLogin()
+                let code
+                if (process.platform === 'win32' && program.protocol && (await LoginProtocol.canInstall()) && (await LoginProtocol.install())) {
+                    console.log('Login URL:', login_url.cyan)
+
+                    open(login_url)
+                    code = await receiveLoginCode()
+                    await LoginProtocol.uninstall()
+                } else {
+
+                    if (!readlinesync.keyInYN('Continue?')) process.exit()
+                    console.log('\nLogin URL:', login_url.cyan)
+                    open(login_url)
+                    code = (() => {
+                        while (true) {
+                            const input = readlinesync.question('Code: '.yellow)
+                            if (input) return input
+                        }
+                    })()
+                }
+                await Pixiv.login(code, code_verifier)
+            }
+            console.log('\nLogin success!\n'.green)
+        } catch (error) {
+            console.log('\nLogin fail!'.red, 'Please check your input or proxy setting.\n')
+            if (global.p_debug) console.error(error)
+        }
+    } else if (program.logout) {
+        // 登出
+        Pixiv.logout()
+        console.log('\nLogout success!\n'.green)
+    } else if (program.delete) {
+
+        await utils.readDirSync(global.inComplete).then(files => {
+            for (let file of files) {
+
+                Fse.removeSync(Path.join(global.inComplete, file))
+                console.log('Delete:\t' + file)
+
+            }
+        })
+    } else if (program.extract) {
+
+
+
+
+    } else if (program.setting) {
+        //设置
+        let index
+
+
+        do {
+            console.clear()
+            console.log('pxrepo Options'.green)
+            const sysProxy = getSysProxy()
+            const options = [
+                'Download path\t'.yellow + (config.download.path ? config.download.path : 'Null, please set one'.bgRed),
+                'Download thread\t'.yellow + config.download.thread,
+                'Auto rename\t\t'.yellow + (config.download.autoRename ? 'On' : 'Off'),
+                'Proxy\t\t'.yellow + (checkProxy(config.proxy) && config.proxy ? config.proxy : checkProxy(sysProxy) && sysProxy ? `[env] ${sysProxy}` : 'disable'),
+                'Direct mode\t\t'.yellow + (config.directMode ? 'Enabled' : 'Disabled'),
+            ]
+            index = readlinesync.keyInSelect(options, 'Press a key:', {
+                cancel: 'Exit'.bgMagenta,
+            })
+
+
+            switch (index) {
+                case 0: //下载路径
+                    const initial = config.download.path || ''
+                    config.download.path =
+                        (
+                            await prompts({
+                                type: 'text',
+                                name: 'value',
+                                message: 'Please input a download path'.yellow,
+                                format: v => Path.resolve(v.trim()),
+                                initial,
+                            })
+                        ).value || initial
+                    break
+
+                case 1: //下载线程
+
+                    config.download.thread = getStrictIntInput(
+                        'Please input the number of download thread:'.yellow + config.download.thread + ' [1-90, default is 32]\n', {
+                            defaultInput: 32,
+                        },
+                        input => input >= 1 && input <= 90,
+                        'It must be between 1 and 90.'
+                    )
+
+
+
+
+                    break
+
+                case 2: //自动重命名
+                    config.download.autoRename = readlinesync.keyInYNStrict('Do you want to turn on auto rename?'.yellow + (config.download.autoRename ? 'On' : 'Off'))
+                    break
+
+                case 3: //代理设置
+                    config.proxy = readlinesync.question(
+                        'Please input your HTTP/SOCKS proxy like:\n'.yellow + (checkProxy(config.proxy) && config.proxy ? config.proxy : checkProxy(sysProxy) && sysProxy ? `[env] ${sysProxy}` : 'disable') +
+                        '  <protocol>://[user:passwd@]<ip>:<port>\n' +
+                        '  <protocol> can be http(s) / socks(4|4a|5|5h)\n' +
+                        'Example\n'.yellow +
+                        'http://user:passwd@127.0.0.1:1080\n' +
+                        'socks://127.0.0.1:1080\n' +
+                        'If you input nothing, pxrepo will load proxy from environment variables if avaliable.\n'.yellow +
+                        'If you want to DISABLE it, please input '.yellow +
+                        'disable'.red +
+                        '.\n'.yellow, {
+                            limitMessage: '\nIncorrect format, please re-input.\n'.bgRed,
+                            limit: checkProxy,
+                        })
+                    break
+                case 4:
+                    config.directMode = !config.directMode
+                    break
+            } //switch end
+
+            Pixiv.writeConfig(config)
+        } while (index !== -1)
+
+        console.log('Exit'.green)
+    } else if (program.blacklist) {
+
+        //得到UID
+        let uids = program.blacklist
+        if (typeof uids === 'string') {
+            uids = uids.split(',')
+
+            const uidArray = Array.isArray(uids) ? uids : [uids]
+            if (!Fs.existsSync(global.blacklistJson)) //如果不存在blacklistJson则创建
+            {
+                global.blacklist = []
+                global.blacklist.push(new Illustrator(11))
+                await Fs.writeFileSync(global.blacklistJson, JSON.stringify(global.blacklist))
+
+            }
+            global.blacklist = require(global.blacklistJson)
+            for (const uid of uidArray) {
+                //添加黑名单
+
+                if (!utils.checkExist(global.blacklist, uid, global.blacklistJson)) {
+                    console.log(`将   (${uid})  添加到了黑名单`)
+                    utils.showExists(global.blacklistJson)
+                } else {
+                    console.log(`(${uid}) 存在于黑名单,此次操作为移出黑名单`)
+
+                    Fs.writeFileSync(global.blacklistJson, JSON.stringify(utils.deleteExist(uid, global.blacklistJson)))
+
+
+                    utils.showExists(global.blacklistJson)
+
+                }
+
+
+
+
+
+            }
+
+
+        } else help()
+
+    } else {
+        pass = true
+    }
+    if (!pass) {
+        process.exit()
+    }
+}
+
+
+
+
+function getStrictIntInput(question, option, limit, limitReply) {
+    let result = readlinesync.questionInt(question, option)
+    while (!limit(result)) {
+        console.log('\n' + limitReply.bgRed + '\n')
+        result = readlinesync.questionInt(question, option)
+    }
+    return result
+}
+
+
+function help() {
+    console.error('\nMissing arguments!'.bgRed)
+    program.outputHelp()
+}
