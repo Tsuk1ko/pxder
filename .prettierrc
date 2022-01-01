@@ -3,7 +3,15 @@
 	"singleQuote": true,
 	"trailingComma": "es5",
 	"arrowParens": "avoid",
-	"useTabs": false,
-	"tabWidth": 2,
-	"semi": true
+	"useTabs": true,
+	"tabWidth": 4,
+	"semi": true,
+	"overrides": [
+		{
+			"files": "src/pixiv-api-client-mod.js",
+			"options": {
+				"useTabs": false
+			}
+		}
+	]
 }
