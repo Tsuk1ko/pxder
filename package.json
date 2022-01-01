@@ -1,6 +1,6 @@
 {
     "name": "pxrepo",
-    "version": "4.0.2-3",
+    "version": "4.0.2-6",
     "description": "源码来自GitHub上的开源项目：https://github.com/Tsuk1ko/pxder",
     "main": "index.js",
     "dependencies": {
@@ -32,7 +32,7 @@
         "@types/readline-sync": "^1.4.3"
     },
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "run": "pxrepo"
     },
     "bin": {
         "pxrepo": "bin/pxrepo"

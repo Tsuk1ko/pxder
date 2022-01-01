@@ -83,7 +83,10 @@ async function downloadByIllustrators(illustrators, callback) {
  * @returns
  */
 async function getDownloadListByIllustrator(illustrator) {
-    illustratorFolder = await illustrator.info().then(getIllustratorNewDir)
+    const illustratorFolder = await illustrator.info().then(getIllustratorNewDir)
+    const ugoiraDir = new UgoiraDir(Path.join(config.path, illustratorFolder))
+    const illustExists = file => (file.endsWith('.zip') ? ugoiraDir.existsSync(file) : Fse.existsSync(Path.join(Path.join(config.path, illustratorFolder), file)))
+
     let illusts = []
     let cnt
     let processDisplay = utils.showProgress(() => illusts.length)
@@ -91,12 +94,12 @@ async function getDownloadListByIllustrator(illustrator) {
         cnt = 0
         let allTheIllusts = await illustrator.getIllusts('illustrator')
         for (let illust of allTheIllusts) {
-            if (!Fs.existsSync(Path.join(config.path, illustratorFolder, illust.file))) {
+            if (!illustExists(illust.file)) {
                 illusts.push(illust)
                 cnt++
             }
         }
-    } while (illustrator.hasNext('illust') && cnt > 0 && illusts.length < 4500) utils.clearProgress(processDisplay)
+    } while (illustrator.hasNext('illust') && cnt > 0) utils.clearProgress(processDisplay)
     return {
         illustratorFolder,
         illusts: illusts.reverse()
@@ -123,7 +126,7 @@ async function downloadByBookmark(me, isPublic) {
         console.log('\nCollecting illusts of your bookmark')
         do {
 
-            bookmarks = await me.getIllusts('bookmark', {
+            bookmarks = await me.getIllusts('illust', {
                 restrict: isPublic ? 'public' : 'private',
             })
             for (const bookmark of bookmarks) {
@@ -221,12 +224,12 @@ function downloadIllusts(illusts, dldir, configThread) {
                     }
                     //失败重试	
                     //console.log(illust)
-                    return download.download(inComplete, illust.file, illust.url, options, errorTimeout).then(async res => {
+                    return download.download(inComplete, illust.file, illust.url, options).then(async res => {
                             //文件完整性校验
                             let fileSize = res.headers['content-length']
                             let dlfile = Path.join(inComplete, illust.file)
 
-                            for (let i = 0; i < 10 && !Fs.existsSync(dlfile); i++) await utils.sleep(200) ////
+                            for (let i = 0; i < 10 && !Fs.existsSync(dlfile); i++) await utils.sleep(200)
                             await utils.sleep(500)
 
                             if (!fileSize || Fs.statSync(dlfile).size == fileSize) //根据文件大小判断下载是否成功

@@ -1,3 +1,11 @@
+/*
+ * @Author       : EIGHTfs
+ * @Date         : 2022-01-01 02:17:21
+ * @LastEditors  : EIGHTfs
+ * @LastEditTime : 2022-01-01 22:17:32
+ * @Description  : file content
+ * @FilePath     : \pxrepo\src\illustrator.js
+ */
 const Illust = require('./illust')
 
 
@@ -61,7 +69,7 @@ class Illustrator {
         if (this.next[type]) json = await global.pixiv.requestUrl(this.next[type])
         else {
             if (type == 'illustrator') json = await global.pixiv.userIllusts(this.id)
-            else if (type == 'bookmark') {
+            else if (type == 'illust') {
                 if (option) json = await global.pixiv.userBookmarksIllust(this.id, option)
                 else json = await global.pixiv.userBookmarksIllust(this.id)
             }

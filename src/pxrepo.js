@@ -225,13 +225,8 @@ class PixivFunc {
         let follows = []
         let next = this.followNextUrl
         let dir_Illustrator
-
         if (!Fs.existsSync(__config.download.path)) Fs.mkdirSync(__config.download.path)
-            //	if (Fs.existsSync(downJson)) follows =require(downJson) ;
-
-
-
-        //加入画师信息
+            //加入画师信息
         async function addToFollows(data) {
             next = data.next_url
             var offset = ''
@@ -240,7 +235,6 @@ class PixivFunc {
                 global.blacklist = []
                 global.blacklist.push(new Illustrator(11))
                 await Fs.writeFileSync(global.blacklistJson, JSON.stringify(global.blacklist))
-
             }
             global.blacklist = require(global.blacklistJson)
             for (const preview of data.user_previews) {
@@ -249,12 +243,10 @@ class PixivFunc {
                     console.log(`黑名单： (${preview.user.id})`)
                     continue
                 } else {
-
                     dir_Illustrator = Path.join(__config.download.path, utils.RemoveIllegalCharacters(preview.user.id, preview.user.name))
                     if (utils.checkExist(global.blacklist, preview.user.id))
                         if (!Fs.existsSync(dir_Illustrator))
                             Fs.mkdirSync(dir_Illustrator)
-
                     follows.push({
                         id: preview.user.id,
                         name: preview.user.name,
@@ -273,15 +265,7 @@ class PixivFunc {
             })
             .then(addToFollows)
 
-
         this.followNextUrl = next
-            //this.followNextUrl = 'https://app-api.pixiv.net/v1/user/following?user_id=25160987&restrict=private&offset=5090';//{"offset":["Offset must be no more than 5000"]}
-            //console.log('url:' + this.followNextUrl);
-            //offset=this.followNextUrl;
-            //console.log(offset);		
-
-
-
         return follows
     }
 

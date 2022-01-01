@@ -2,7 +2,7 @@
 
 ## 声明
 
-### \*此项目的源码来自 GitHub 上的开源项目:[Tsuk1ko/pxder](https://github.com/Tsuk1ko/pxder)，为了针对个人体验时的想法进行了修改（因为我没学过nodejs,所以改得贼烂,依葫芦画瓢(复制粘贴)试出来的,专业不对口）
+### \*此项目的源码来自 GitHub 上的开源项目:[Tsuk1ko/pxder](https://github.com/Tsuk1ko/pxder)，为了针对个人体验时的想法进行了修改（因为我没学过nodejs,所以改得贼烂,依葫芦画瓢(复制粘贴)试出来的）
 
 
 ## 准备
@@ -22,7 +22,7 @@
 ### 登录
 
 ```bash
-`pxrepo --login`
+`--login`
 ```
 
 注：pxrepo 仅会在计算机上储存 refreshAccessToken，而不会储存您的帐号密码
@@ -30,7 +30,7 @@
 如果要登出
 
 ```bash
-`pxrepo --logout`
+`--logout`
 ```
 
 ## 对 pxder 的修改
@@ -69,8 +69,6 @@
 
 ### 其他方面
 
-#### 缓存目录和程序目录位于同一个文件夹下，下载会在缓存目录下再创建格式为"(" + id + ")"的文件夹。不再是直接都放在整个缓存目录，运行时不会删掉缓存目录 (`pxrepo -D`可以删除缓存目录里面所有文件)
-
 #### 可以一直下载不会卡住了，包括出现以下异常时仍能继续(但如果获取的时候卡住了，那就是真的卡住了)
 `Rate Limit` 
 `Your access is currently restricted.`
@@ -92,3 +90,8 @@
 `-l, --blacklist <uid(s)>`
 ```
 
+### \*拆分大json文件同样指定json文件，后面加个英文逗号,分割指定大小，不指定不会出错但是会生成非常多的小json文件。想加个这个小功能主要是json文件过大没准会出问题。而且由于下载频繁读写json文件必然影响性能。
+
+```bash
+`-d, --divide [Json]`
+```

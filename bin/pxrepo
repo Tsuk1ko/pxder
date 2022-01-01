@@ -151,27 +151,31 @@ handleArgv()
 
         }
         if (program.divide) {
-            let Json = program.divide
+            let divide = program.divide.split(',')
+            let Json = divide[0]
+
+            let size = parseInt(divide[1])
+
             console.log(Json)
+            console.log(size)
             if (typeof Json == 'string') {
                 switch (Json) {
                     case 'downJson':
-                        await utils.divideJson(global.downJson, 1000)
+                        await utils.divideJson(global.downJson, size)
                         break
                     case 'historyJson':
-                        await utils.divideJson(global.historyJson, 1000)
+                        await utils.divideJson(global.historyJson, size)
                         break
                     case 'blacklistJson':
                         utils.showExists(global.blacklistJson)
                         break
                     default:
                         if (Fs.existsSync(Json))
-                            await utils.divideJson(Json, 1000)
+                            await utils.divideJson(Json, size)
                 }
-            } else await utils.divideJson(global.downJson, 1000)
+            } else await utils.divideJson(global.downJson, size)
 
         }
-        /////////////////////////
         if (program.bookmark) {
             let isPublic = program.bookmark
                 //console.log(isPublic)
