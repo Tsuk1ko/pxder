@@ -68,7 +68,7 @@ function callApi(url, options, retry = 2) {
         await sleep(3 * 1000);
         return callApi(url, options);
       } else if (err.response && err.response.data) {
-        const msg = err.response.data;
+        const msg = JSON.stringify(err.response.data);
         if (/rate limit/i.test(msg)) {
           console.error('Rate limit detected. Pause for 10 minutes.'.gray);
           await sleep(10 * 60 * 1000);
