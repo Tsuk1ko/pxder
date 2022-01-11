@@ -22,7 +22,7 @@ const open = require('open');
  * Usage
  */
 
-const optionNewLine = '\n                        ';
+const optionNewLine = '\n                         ';
 
 program
   .usage('<options>')
@@ -50,7 +50,7 @@ program
   .option('-O, --output-dir <dir>', 'Specify download directory')
   .option('')
   .option('    --debug', 'output all error messages while running')
-  .option('    --conf-loca', 'output the location of config and exit')
+  .option('    --output-config-dir', 'output the directory of config and exit')
   .option('    --export-token', 'output current refresh token and exit')
   .option('')
   .version(pkg.version, '-v, --version')
@@ -146,7 +146,7 @@ handleArgv()
   });
 
 async function handleArgv() {
-  if (program.confLoca) {
+  if (program.outputConfigDir) {
     console.log(require('appdata-path').getAppDataPath('pxder'));
     process.exit();
   }

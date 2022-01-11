@@ -260,5 +260,5 @@ pxder -p 70593670,70594912,70595516
   从旧的资源域名 `i.pximg.net` 下载插画，而不是新的套了 CF 的 `i-cf.pximg.net`
 - `--debug`  
   出错时输出详细的错误信息，如果你发现了 bug 想要提 issue，请尽量附上加了该参数时的错误日志
-- `--conf-loca`  
+- `--output-config-dir`  
   输出 pxder 的配置存放路径
