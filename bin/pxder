@@ -28,7 +28,7 @@ program
   .usage('<options>')
   .option('    --login [token]', 'login Pixiv')
   .option('    --logout', 'logout Pixiv')
-  .option('    --no-protocol', 'use with --login to block pixiv:// registration on Windows')
+  .option('    --no-protocol', 'use with --login to login without pixiv:// registration on Windows')
   .option('')
   .option('    --setting', 'open options menu')
   .option('')

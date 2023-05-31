@@ -10,7 +10,7 @@
 
 ## 准备
 
-首先你需要先安装 Node.js  
+首先你需要先安装 Node.js >= 16
 
 ### Windows / Mac
 
