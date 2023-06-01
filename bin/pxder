@@ -44,7 +44,6 @@ program
   .option('')
   .option('-U, --update', "update all illustrators' illusts in your download path")
   .option('')
-  .option('    --no-cf', 'download illusts from i.pximg.net instead of i-cf.pximg.net')
   .option('-M, --no-ugoira-meta', `will not request meta data for ugoira, it helps save time or${optionNewLine}avoid API rate limit error when downloading a tons of ugoiras`)
   .option('')
   .option('-O, --output-dir <dir>', 'Specify download directory')
@@ -154,7 +153,6 @@ async function handleArgv() {
   // 全局参数
   if (program.debug) global.p_debug = true;
   global.ugoiraMeta = program.ugoiraMeta;
-  global.cf = program.cf;
 
   // 清理 protocol
   if (process.platform === 'win32' && (await LoginProtocol.exists())) {

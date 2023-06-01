@@ -43,7 +43,6 @@ async function download(dirpath, filename, url, axiosOption) {
   };
 
   const finalUrl = new URL(url);
-  finalUrl.hostname = global.cf ? 'i-cf.pximg.net' : 'i.pximg.net';
   if (global.p_direct && finalUrl.hostname in HOSTS) {
     axiosOption.headers.Host = finalUrl.host;
     finalUrl.hostname = HOSTS[finalUrl.hostname];
