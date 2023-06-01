@@ -10,7 +10,6 @@
     "commander": "^5.1.0",
     "compare-versions": "^4.1.4",
     "fs-extra": "^11.1.1",
-    "https-proxy-agent": "^5.0.1",
     "js-base64": "^3.7.5",
     "latest-version": "^5.1.0",
     "lodash.flatmap": "^4.5.0",
@@ -18,9 +17,9 @@
     "open": "^8.4.2",
     "pixiv-api-client": "^0.25.0",
     "prompts": "^2.4.2",
+    "proxy-agent": "^6.2.1",
     "readline-sync": "^1.4.10",
-    "register-protocol-win32": "^1.1.0",
-    "socks-proxy-agent": "^5.0.1"
+    "register-protocol-win32": "^1.1.0"
   },
   "devDependencies": {
     "@types/eslint": "^8.40.0",
