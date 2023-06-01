@@ -86,6 +86,13 @@
   dependencies:
     defer-to-connect "^1.0.1"
 
+"@tsuk1ko/postversion@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@tsuk1ko/postversion/-/postversion-1.0.2.tgz#69b29969b96e2c24cf0081366818ef4d23cc22a5"
+  integrity sha512-8SHVF8AA0iZhlmzv3QZ+1I5luKelVc7J6WAJbkRZJ638+zmxTadyNSVIiu4LxRfb6823MDHUra9HjVNw+Pigmg==
+  dependencies:
+    yesno "^0.4.0"
+
 "@types/eslint@^8.40.0":
   version "8.40.0"
   resolved "https://registry.yarnpkg.com/@types/eslint/-/eslint-8.40.0.tgz#ae73dc9ec5237f2794c4f79efd6a4c73b13daf23"
@@ -2179,6 +2186,11 @@ wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
   integrity sha1-tSQ9jz7BqjXxNkYFvA0QNuMKtp8=
+
+yesno@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/yesno/-/yesno-0.4.0.tgz#5d674f14d339f0bd4b0edc47f899612c74fcd895"
+  integrity sha512-tdBxmHvbXPBKYIg81bMCB7bVeDmHkRzk5rVJyYYXurwKkHq/MCd8rz4HSJUP7hW0H2NlXiq8IFiWvYKEHhlotA==
 
 yocto-queue@^0.1.0:
   version "0.1.0"
