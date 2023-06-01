@@ -20,15 +20,15 @@
 
 ```bash
 # Ubuntu
-curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 # Debian
-curl -sL https://deb.nodesource.com/setup_12.x | bash -
+curl -sL https://deb.nodesource.com/setup_16.x | bash -
 apt-get install -y nodejs
 
 # Centos
-curl -sL https://rpm.nodesource.com/setup_12.x | bash -
+curl -sL https://rpm.nodesource.com/setup_16.x | bash -
 yum install -y nodejs
 ```
 
