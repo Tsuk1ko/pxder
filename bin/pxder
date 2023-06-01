@@ -9,7 +9,7 @@ const pixivLogin = require('../src/pixiv-login');
 const UpdateChecker = require('../src/updateChecker');
 const logError = require('../src/logError');
 const pkg = require('../package.json');
-const { checkProxy, getSysProxy } = require('../src/proxy');
+const { checkProxy } = require('../src/proxy');
 const LoginProtocol = require('../src/protocol');
 const receiveLoginCode = require('../src/protocol/receiver');
 
@@ -93,8 +93,7 @@ handleArgv()
 
     // 开始下载
     console.log('\nDownload Path:\t'.cyan + config.download.path.toString().yellow);
-    if (config.directMode) console.log('Direct Mode:\t'.cyan + 'Enabled'.yellow);
-    else if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
+    if (typeof config.proxy == 'string' && config.proxy.length > 0) console.log('Using Proxy:\t'.cyan + config.proxy.yellow);
 
     if (program.follow) await pixiv.downloadFollowAll(false, program.force);
     if (program.followPrivate) await pixiv.downloadFollowAll(true, program.force);
@@ -210,14 +209,12 @@ async function handleArgv() {
     do {
       console.clear();
       console.log('Pxder Options'.green);
-      const sysProxy = getSysProxy();
       const options = [
         'Download path\t'.yellow + (config.download.path ? config.download.path : 'Null, please set one'.bgRed),
         'Download thread\t'.yellow + config.download.thread,
         'Download timeout\t'.yellow + config.download.timeout,
         'Auto rename\t\t'.yellow + (config.download.autoRename ? 'Enabled' : 'Disabled'),
-        'Proxy\t\t'.yellow + (checkProxy(config.proxy) && config.proxy ? (config.proxy === 'disable' ? 'Disabled' : config.proxy) : checkProxy(sysProxy) && sysProxy ? `[env] ${sysProxy}` : 'None'),
-        'Direct mode\t\t'.yellow + (config.directMode ? 'Enabled' : 'Disabled'),
+        'Proxy\t\t'.yellow + (checkProxy(config.proxy) && config.proxy ? (config.proxy === 'disable' ? 'Disabled' : config.proxy) : 'From env vars'),
       ];
       index = readline.keyInSelect(options, 'Press a key:', {
         cancel: 'Exit'.bgMagenta,
@@ -268,11 +265,11 @@ async function handleArgv() {
         case 4: // 代理设置
           config.proxy = readline.question(
             'Please input your HTTP/SOCKS proxy like:\n'.yellow +
-              '  <protocol>://[user:passwd@]<ip>:<port>\n' +
-              '  <protocol> can be http(s) / socks(4|4a|5|5h)\n' +
+              '  <protocol>://[user:passwd@]<hostname>[:<port>]\n' +
+              '  <protocol> can be http(s) / socks(4|4a|5|5h) / pac+(http|https|ftp|file)\n' +
               'Example\n'.yellow +
-              '  http://user:passwd@127.0.0.1:1080\n' +
-              '  socks://127.0.0.1:1080\n' +
+              '  http://127.0.0.1:1080\n' +
+              '  socks://127.0.0.1:7890\n' +
               'If you input nothing, pxder will load proxy from environment variables if avaliable.\n'.yellow +
               'If you want to fully DISABLE it, please input '.yellow +
               'disable'.red +
@@ -282,9 +279,6 @@ async function handleArgv() {
               limit: checkProxy,
             }
           );
-          break;
-        case 5:
-          config.directMode = !config.directMode;
           break;
       } // switch end
 

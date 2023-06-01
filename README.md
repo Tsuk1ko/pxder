@@ -109,7 +109,6 @@ pxder --setting
 [3] Download timeout        # 下载超时
 [4] Auto rename             # 自动重命名（文件夹）
 [5] Proxy                   # 使用代理
-[6] Direct mode             # 直连模式
 ```
 
 - **下载目录**  
@@ -133,8 +132,9 @@ pxder --setting
   如果输入空行则会尝试从环境变量中依次读取 `all_proxy` `https_proxy` `http_proxy`（也包含全大写的环境变量）  
   如果想完全禁止使用代理，请输入 `disable`
 - **直连模式**  
-  利用域前置（Domain Fronting）绕过 SNI 审查，达到直连使用的目的  
-  直连模式不能和代理同时使用
+  ~~利用域前置（Domain Fronting）绕过 SNI 审查，达到直连使用的目的~~  
+  ~~直连模式不能和代理同时使用~~  
+  已被移除，不再维护，请使用其他工具代替，例如 [Watt Toolkit](https://steampp.net/)
 
 ## 说明
 
@@ -256,8 +256,6 @@ pxder -p 70593670,70594912,70595516
   下载动图时不请求其元数据，在下列情况下会有帮助
   1. 对动图的帧间隔信息无所谓，不请求可以节省大量解析时间
   2. 画师是专门画动图的，几百张动图解析起来实在是慢，并且动图太多可能导致达到 API 调用速率限制
-- `--no-cf`  
-  从旧的资源域名 `i.pximg.net` 下载插画，而不是新的套了 CF 的 `i-cf.pximg.net`
 - `--debug`  
   出错时输出详细的错误信息，如果你发现了 bug 想要提 issue，请尽量附上加了该参数时的错误日志
 - `--output-config-dir`  

@@ -38,21 +38,10 @@ const CLIENT_ID = 'MOBrBDS8blbauoSck0ZfDbtuzpyT';
 const CLIENT_SECRET = 'lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj';
 const HASH_SECRET = '28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c';
 
-const HOSTS = {
-  'oauth.secure.pixiv.net': '210.140.131.218',
-  'app-api.pixiv.net': '210.140.131.218',
-};
-
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 function callApi(url, options, retry = 2) {
-  let finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
-  if (global.p_direct) {
-    const fUrl = new URL(finalUrl);
-    options.headers.Host = fUrl.host;
-    fUrl.hostname = HOSTS[fUrl.hostname];
-    finalUrl = fUrl.href;
-  }
+  const finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
   return axios(finalUrl, options)
     .then(res => res.data)
     .catch(async err => {

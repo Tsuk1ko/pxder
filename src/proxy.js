@@ -1,22 +1,16 @@
 const flatMap = require('lodash.flatmap');
-const SocksProxyAgent = require('socks-proxy-agent');
-const HttpsProxyAgent = require('https-proxy-agent');
+const { ProxyAgent } = require('proxy-agent');
 
 const envNames = flatMap(['all_proxy', 'https_proxy', 'http_proxy'], name => [name, name.toUpperCase()]);
 
 function checkProxy(proxy) {
-  return (
-    typeof proxy === 'string' &&
-    !!proxy.match(
-      /(^(https?|socks(4|4a|5|5h)?):\/\/(.+@)?((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d))):(([1-9]\d{0,3})|([1-5]\d{4})|(6[0-4]\d{3})|(65[0-4]\d{2})|(655[0-2]\d)|(6553[0-5]))$)|(^$)|(^disable$)/
-    )
-  );
+  return typeof proxy === 'string' && /(^$)|(^disable$)|(^(https?|socks(4a?|5h?)?):\/\/.)|(^pac\+(file|ftp|https?):\/\/.)/.test(proxy);
 }
 
 function getProxyAgent(proxy) {
-  if (typeof proxy === 'string' && checkProxy(proxy)) {
-    if (proxy.match(/^https?:\/\//)) return new HttpsProxyAgent(proxy);
-    if (proxy.match(/^socks(4|4a|5|5h)?:\/\//)) return new SocksProxyAgent(proxy, true);
+  if (checkProxy(proxy) && proxy !== 'disable') {
+    if (!proxy) return new ProxyAgent();
+    return new ProxyAgent({ getProxyForUrl: () => proxy });
   }
   return null;
 }

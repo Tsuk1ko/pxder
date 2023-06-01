@@ -6,7 +6,7 @@ const Illustrator = require('./illustrator');
 const Fse = require('fs-extra');
 const Path = require('path');
 const Tools = require('./tools');
-const { getProxyAgent, getSysProxy, delSysProxy } = require('./proxy');
+const { getProxyAgent, delSysProxy } = require('./proxy');
 const { Agent } = require('https');
 
 const CONFIG_FILE_DIR = require('appdata-path').getAppDataPath('pxder');
@@ -116,27 +116,13 @@ class PixivFunc {
    * @memberof PixivFunc
    */
   static applyProxyConfig(config = PixivFunc.readConfig()) {
-    if (config.directMode) {
-      global.p_direct = true;
-      PixivApi.setAgent(
-        new Agent({
-          rejectUnauthorized: false,
-          servername: '',
-        })
-      );
-      delSysProxy();
-    } else {
-      const proxy = config.proxy;
-      const sysProxy = getSysProxy();
-      // if config has no proxy and env has, use it
-      const agent = proxy === 'disable' ? null : getProxyAgent(proxy) || getProxyAgent(sysProxy);
-      // fix OAuth may fail if env has set the http proxy
-      if (sysProxy) delSysProxy();
-      if (agent) {
-        Downloader.setAgent(agent);
-        PixivApi.setAgent(agent);
-        global.proxyAgent = agent;
-      }
+    const agent = getProxyAgent(config.proxy);
+    // fix OAuth may fail
+    delSysProxy();
+    if (agent) {
+      Downloader.setAgent(agent);
+      PixivApi.setAgent(agent);
+      global.proxyAgent = agent;
     }
   }
 

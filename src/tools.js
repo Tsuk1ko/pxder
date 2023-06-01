@@ -18,10 +18,6 @@ function clearProgress(interval) {
   Readline.cursorTo(process.stdout, 0);
 }
 
-const HOSTS = {
-  'i.pximg.net': '210.140.92.138',
-};
-
 /**
  * Download file via axios, will make directories automatically
  *
@@ -43,10 +39,6 @@ async function download(dirpath, filename, url, axiosOption) {
   };
 
   const finalUrl = new URL(url);
-  if (global.p_direct && finalUrl.hostname in HOSTS) {
-    axiosOption.headers.Host = finalUrl.host;
-    finalUrl.hostname = HOSTS[finalUrl.hostname];
-  }
 
   // axios timeout 只针对 response，不针对 connection，因此需要二重保险
   let timeout = axiosOption.timeout ? setTimeout(() => controller.abort(), axiosOption.timeout * 2) : null;
